@@ -1,25 +1,35 @@
 # OpenTruth
 
-Independent verification that software **actually satisfies a requirement**.
+An **open verification protocol** for independently establishing software
+requirements from executable evidence.
 
-Not “did the AI write code?” — **did the built system do the thing in reality?**
+The urgent use case is AI-built software. The protocol is not limited to it.
+The builder may be an AI or a human. OpenTruth is the verifier, never the
+builder.
 
-OpenTruth is the verifier, never the builder. It does not write tests into the target
-repository. It operates the application, records an immutable evidence graph, and
-returns `PROVEN` / `PARTIALLY_PROVEN` / `FAILED` / `NOT_PROVEN` / `INCONCLUSIVE`.
+Not “did the AI write code?” — **did the running system satisfy the requirement?**
 
-`PROVEN` is defensible only if a stranger can walk `R-1 → C-3 → E-* → O-*` and the
-file hashes still match. That sealed run directory *is* the product.
+It does not write tests into the target repository. It operates the application,
+records an immutable evidence graph, and returns
+`PROVEN` / `PARTIALLY_PROVEN` / `FAILED` / `NOT_PROVEN` / `INCONCLUSIVE`.
 
-See [`../ideas/Prove.md`](../ideas/Prove.md) for the **protocol specification**: laws, verdict
-semantics, evidence model, Verification IR contract, and the v0.1.0-m1 freeze.
-The six proof layers are shipped. The planner can change; the proof machinery
-does not.
+`PROVEN` means required coverage was executed, required assertions hold, the
+evidence chain is intact, and the seal still matches. It is not a log line.
+
+**The planner can change; the notebook machinery does not.**
+
+See the **[product report](PRODUCT-REPORT.md)** for the full status: protocol
+boundary, MiniAuth falsification contract, working conditions, laws, inventory,
+and what not to start yet. See [`../ideas/Prove.md`](../ideas/Prove.md) for the
+**protocol specification**.
 
 ## Status
 
-Six proof layers shipped. Verification IR (`verification.version: 1`) compiles
-into the existing `plan.json`. Company site plus live console: `opentruth serve`.
+**v0.1 proof loop established. v0.2 Verification IR implemented. Proof machinery
+unchanged.** Headline is reproducible MiniAuth falsification, not a test count.
+
+Company site plus live console: `opentruth serve`. Full write-up:
+**[PRODUCT-REPORT.md](PRODUCT-REPORT.md)**.
 
 ## v0.1.0-m1 acceptance contract
 

@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>OpenTruth — Independent software verification</title>
-  <meta name="description" content="OpenTruth independently operates software against a requirement and returns a sealed evidence graph. PROVEN is defensible. Verifier ≠ Builder."/>
+  <title>OpenTruth — Independent verification protocol</title>
+  <meta name="description" content="OpenTruth is an open verification protocol for independently establishing software requirements from executable evidence. Verifier ≠ Builder. PROVEN is coverage + assertions + intact chain + valid seal."/>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -17,9 +17,9 @@
   <section class="hero">
     <div class="wrap hero-grid">
       <div>
-        <div class="kicker">Verification engine · M1–M6</div>
+        <div class="kicker">Open verification protocol</div>
         <h1>Did the software actually satisfy the requirement?</h1>
-        <p class="lede">Coding agents write software, then report that the work is done. OpenTruth is the independent verifier: it operates the built system, records an immutable evidence graph, and returns a verdict a stranger can walk.</p>
+        <p class="lede">OpenTruth independently establishes software requirements from executable evidence. AI-built software is the urgent case. The protocol still applies when the builder is human. The planner can change; the notebook does not.</p>
         <div class="actions">
           <a class="btn" href="/console">Open the console</a>
           <a class="btn ghost" href="/evidence">Read the evidence model</a>
@@ -42,15 +42,15 @@
         <div class="index">01 / Thesis</div>
         <div>
           <h2>Verifier ≠ Builder.</h2>
-          <p class="muted">The same agent that shipped the feature is not the entity that decides it works. OpenTruth never writes tests into the target repository. Plans and evidence live only under a hash-sealed run directory. <em>PROVEN</em> is not a log line.</p>
+          <p class="muted">The same agent that shipped the feature is not the entity that decides it works. OpenTruth never writes tests into the target repository. Plans and evidence live only under a hash-sealed run directory. <em>PROVEN</em> is required coverage executed, required assertions established, an intact evidence chain, and a seal that still matches — not a log line.</p>
         </div>
       </div>
       <ul class="rule-list">
-        <li><strong>PROVEN</strong><span>Every planned assertion for the requirement was observed to hold.</span></li>
+        <li><strong>PROVEN</strong><span>Required coverage executed, required assertions hold, evidence chain intact, seal valid.</span></li>
         <li><strong>PARTIALLY_PROVEN</strong><span>Happy path holds; at least one constraint fails — as MiniAuth does on session persist.</span></li>
         <li><strong>FAILED</strong><span>The required happy path was observed not to hold.</span></li>
-        <li><strong>NOT_PROVEN</strong><span>Coverage too thin, or a claimed change did not establish the requirement.</span></li>
-        <li><strong>INCONCLUSIVE</strong><span>Could not observe (app down, timeout). Never counted as pass or fail.</span></li>
+        <li><strong>NOT_PROVEN</strong><span>Not enough evidence to establish the claim. Not the same as FAILED.</span></li>
+        <li><strong>INCONCLUSIVE</strong><span>Could not observe (app down, timeout). Not a pass and not a product failure.</span></li>
       </ul>
     </div>
   </section>

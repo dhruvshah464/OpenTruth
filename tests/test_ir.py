@@ -9,7 +9,15 @@ import pytest
 import yaml
 
 from opentruth.engine import verify
-from opentruth.ir import IrError, compile_verification
+from opentruth.ir import (
+    IrError,
+    annotate_coverage,
+    compile_verification,
+    normalize_verification,
+    parse_verification,
+    uncovered_constraint_ids,
+    validate_verification,
+)
 from opentruth.llm import build_plan
 from opentruth.planning import expand
 from opentruth.requirement import load_requirement_document, load_requirements
@@ -75,6 +83,36 @@ verification:
         expect: "201"
 """
 
+ACTION_ONLY_IR = """
+requirement: "Signup creates an account."
+constraints:
+  - statement: "A second signup with the same mailbox is refused."
+verification:
+  version: 1
+  steps:
+    - id: S-1
+      constraint: C-0
+      http_request:
+        method: POST
+        path: /api/signup
+        json:
+          email: "{{actor.email}}"
+          password: "{{actor.password}}"
+    - id: S-2
+      constraint: C-0
+      assert:
+        check: status_equals
+        expect: "201"
+    - id: S-3
+      constraint: C-1
+      http_request:
+        method: POST
+        path: /api/signup
+        json:
+          email: "{{actor.email}}"
+          password: "{{actor.password}}"
+"""
+
 
 def _actor() -> dict[str, str]:
     return {"email": "ir@example.test", "password": "correct-horse-battery"}
@@ -129,6 +167,21 @@ def test_compile_nested_yaml_to_plan_kinds(tmp_path: Path) -> None:
     assert plan["steps"][1]["kind"] == "assert"
     assert plan["steps"][1]["check"] == "status_equals"
     assert {s["constraint_id"] for s in plan["steps"]} == {"C-0", "C-1"}
+    assert plan["uncovered_constraints"] == []
+
+
+def test_ir_pipeline_parse_validate_normalize_compile(tmp_path: Path) -> None:
+    doc = _document(tmp_path, SIGNUP_IR)
+    parsed = parse_verification(doc.verification)
+    ir = validate_verification(parsed, doc.requirement, "api")
+    assert ir.version == 1
+    assert ir.steps[0].kind == "http_request"
+    assert "{{actor.email}}" in str(ir.steps[0].fields)
+    normalized = normalize_verification(ir, _actor())
+    assert normalized.steps[0].fields["json"]["email"] == "ir@example.test"
+    plan = compile_verification(doc.verification, doc.requirement, "api", "http://127.0.0.1:9", _actor())
+    assert plan["planner"] == "ir"
+    assert plan["steps"][0]["json"]["email"] == "ir@example.test"
 
 
 def test_compile_rejects_unknown_version(tmp_path: Path) -> None:
@@ -170,6 +223,42 @@ def test_compile_rejects_unknown_constraint(tmp_path: Path) -> None:
         ],
     }
     with pytest.raises(IrError, match="unknown constraint"):
+        compile_verification(verification, doc.requirement, "api", "http://127.0.0.1:9", _actor())
+
+
+def test_compile_rejects_missing_step_id(tmp_path: Path) -> None:
+    doc = _document(tmp_path, SIGNUP_IR)
+    verification = {
+        "version": 1,
+        "steps": [
+            {
+                "constraint": "C-0",
+                "http_request": {"method": "GET", "path": "/api/me"},
+            }
+        ],
+    }
+    with pytest.raises(IrError, match="id is required"):
+        compile_verification(verification, doc.requirement, "api", "http://127.0.0.1:9", _actor())
+
+
+def test_compile_rejects_unknown_verification_field(tmp_path: Path) -> None:
+    doc = _document(tmp_path, SIGNUP_IR)
+    verification = dict(doc.verification)
+    verification["verdict"] = "PROVEN"
+    with pytest.raises(IrError, match="unknown verification field"):
+        compile_verification(verification, doc.requirement, "api", "http://127.0.0.1:9", _actor())
+
+
+def test_compile_rejects_duplicate_step_id(tmp_path: Path) -> None:
+    doc = _document(tmp_path, SIGNUP_IR)
+    verification = {
+        "version": 1,
+        "steps": [
+            {"id": "S-1", "constraint": "C-0", "http_request": {"method": "GET", "path": "/api/me"}},
+            {"id": "S-1", "constraint": "C-0", "assert": {"check": "status_equals", "expect": "200"}},
+        ],
+    }
+    with pytest.raises(IrError, match="duplicate verification step id"):
         compile_verification(verification, doc.requirement, "api", "http://127.0.0.1:9", _actor())
 
 
@@ -238,6 +327,42 @@ def test_ir_missing_coverage_is_not_proven(tmp_path: Path) -> None:
     assert coverage
     assert coverage[0]["constraint_id"] == "C-1"
     assert coverage[0]["result"] == "inconclusive"
+    plan = load_json(result["run_dir"] / "plan.json")
+    assert plan["uncovered_constraints"] == ["C-1"]
+
+
+def test_action_without_assert_is_not_executable_coverage(tmp_path: Path) -> None:
+    doc = _document(tmp_path, ACTION_ONLY_IR)
+    plan = compile_verification(
+        doc.verification, doc.requirement, "api", "http://127.0.0.1:9", _actor()
+    )
+    assert uncovered_constraint_ids(doc.requirement, plan) == ["C-1"]
+    app = _app_with_yaml(tmp_path, ACTION_ONLY_IR)
+    result = verify(app, runs_root=tmp_path / "runs", persist_session=False, mode="api")
+    req = result["verdict"]["requirements"][0]
+    assert req["verdict"] == NOT_PROVEN
+    rows = {row["id"]: row["result"] for row in req["constraints"]}
+    assert rows["C-0"] == "pass"
+    assert rows["C-1"] == "inconclusive"
+    stored = load_json(result["run_dir"] / "plan.json")
+    assert stored["uncovered_constraints"] == ["C-1"]
+    assertions = load_jsonl(result["run_dir"] / "assertions.jsonl")
+    assert any(a.get("check") == "coverage" and a["constraint_id"] == "C-1" for a in assertions)
+
+
+def test_annotate_coverage_does_not_drop_constraints() -> None:
+    from opentruth.requirement import Constraint, Requirement
+
+    req = Requirement(
+        id="R-1",
+        statement="auth",
+        constraints=(
+            Constraint("C-0", "R-1", "auth", "happy_path"),
+            Constraint("C-1", "R-1", "other", "constraint"),
+        ),
+    )
+    plan = annotate_coverage({"steps": [{"kind": "assert", "constraint_id": "C-0"}]}, req)
+    assert plan["uncovered_constraints"] == ["C-1"]
 
 
 def test_ir_hostile_verify_does_not_expand(tmp_path: Path) -> None:
@@ -266,4 +391,5 @@ def test_miniauth_default_yaml_still_uses_expander(tmp_path: Path) -> None:
     plan = load_json(result["run_dir"] / "plan.json")
     assert plan["planner"] == "deterministic"
     assert "verification_version" not in plan
+    assert plan["uncovered_constraints"] == []
     assert result["verdict"]["requirements"][0]["verdict"] == PARTIALLY_PROVEN

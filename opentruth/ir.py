@@ -16,12 +16,14 @@ fall through to expand() or a fake PROVEN.
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
 from typing import Any
 from uuid import uuid4
 
 from opentruth.requirement import Requirement
 
 SUPPORTED_IR_VERSIONS = frozenset({1})
+VERIFICATION_KEYS = frozenset({"version", "steps"})
 
 HOSTILE_KINDS = frozenset(
     {"shell", "eval", "execute", "run", "write", "python", "subprocess", "javascript", "js"}
@@ -50,6 +52,24 @@ META_KEYS = frozenset({"id", "constraint", "constraint_id", "kind"})
 
 class IrError(ValueError):
     """Verification IR is not executable."""
+
+
+@dataclass(frozen=True)
+class IrStep:
+    """One typed Verification IR step. Not yet an execution-plan step."""
+
+    id: str
+    constraint_id: str
+    kind: str
+    fields: dict[str, Any]
+
+
+@dataclass(frozen=True)
+class VerificationIr:
+    """Versioned Verification IR after schema validation."""
+
+    version: int
+    steps: tuple[IrStep, ...]
 
 
 def has_declared_ir(verification: Any) -> bool:
@@ -201,6 +221,9 @@ def sanitize_step(
 
 
 def _flatten_yaml_step(item: dict[str, Any]) -> dict[str, Any]:
+    extra = [key for key in item if key not in META_KEYS and key not in KIND_KEYS]
+    if extra:
+        raise IrError(f"unknown verification step field: {extra[0]}")
     kind_fields = [key for key in item if key in KIND_KEYS]
     declared_kind = str(item.get("kind") or "")
     if declared_kind in HOSTILE_KINDS:
@@ -229,9 +252,6 @@ def _flatten_yaml_step(item: dict[str, Any]) -> dict[str, Any]:
         return flat
     if declared_kind:
         return dict(item)
-    extra = [key for key in item if key not in META_KEYS]
-    if extra:
-        raise IrError(f"unknown verification step field: {extra[0]}")
     raise IrError("verification step is missing a kind")
 
 
@@ -248,46 +268,110 @@ def _ir_version(raw: dict[str, Any]) -> int:
     return version
 
 
-def compile_verification(
-    verification: Any,
+def parse_verification(verification: Any) -> dict[str, Any]:
+    """First pipeline stage: the verification block must be a mapping."""
+    if not isinstance(verification, dict):
+        raise IrError("verification must be a mapping")
+    return dict(verification)
+
+
+def validate_verification(
+    parsed: dict[str, Any],
+    requirement: Requirement,
+    mode: str,
+) -> VerificationIr:
+    """Second pipeline stage: typed, versioned schema."""
+    if mode not in ALLOWED_KINDS:
+        raise IrError(f"unknown verify mode: {mode}")
+    extra = [key for key in parsed if key not in VERIFICATION_KEYS]
+    if extra:
+        raise IrError(f"unknown verification field: {extra[0]}")
+    version = _ir_version(parsed)
+    steps_in = parsed.get("steps")
+    if steps_in is None:
+        steps_in = []
+    if not isinstance(steps_in, list):
+        raise IrError("verification.steps must be a list")
+    allowed_ids = {c.id for c in requirement.constraints}
+    steps: list[IrStep] = []
+    seen_ids: set[str] = set()
+    for index, item in enumerate(steps_in, start=1):
+        if not isinstance(item, dict):
+            raise IrError(f"verification step {index} must be a mapping")
+        sid = str(item.get("id") or "").strip()
+        if not sid:
+            raise IrError(f"verification step {index} id is required")
+        if sid in seen_ids:
+            raise IrError(f"duplicate verification step id: {sid}")
+        seen_ids.add(sid)
+        cid = str(item.get("constraint") or item.get("constraint_id") or "").strip()
+        if not cid:
+            raise IrError(f"verification step {sid} constraint is required")
+        if cid not in allowed_ids:
+            raise IrError(f"unknown constraint: {cid}")
+        flat = _flatten_yaml_step(item)
+        kind = str(flat.get("kind") or "")
+        if kind in HOSTILE_KINDS:
+            raise IrError(f"hostile step kind: {kind}")
+        if kind not in ALLOWED_KINDS[mode]:
+            raise IrError(f"step kind not allowed in {mode} mode: {kind or '(missing)'}")
+        fields = {k: v for k, v in flat.items() if k not in META_KEYS}
+        steps.append(IrStep(id=sid, constraint_id=cid, kind=kind, fields=fields))
+    return VerificationIr(version=version, steps=tuple(steps))
+
+
+def normalize_verification(ir: VerificationIr, actor: dict[str, str]) -> VerificationIr:
+    """Third pipeline stage: substitute {{actor.*}} templates."""
+    actor = {"email": actor["email"], "password": actor["password"]}
+    steps = tuple(
+        IrStep(
+            id=step.id,
+            constraint_id=step.constraint_id,
+            kind=step.kind,
+            fields=normalize_templates(step.fields, actor),
+        )
+        for step in ir.steps
+    )
+    return VerificationIr(version=ir.version, steps=steps)
+
+
+def uncovered_constraint_ids(requirement: Requirement, plan: dict[str, Any]) -> list[str]:
+    """A C-* is covered only when the plan has an assert (assertion evidence)."""
+    covered = {
+        str(step.get("constraint_id"))
+        for step in plan.get("steps") or []
+        if step.get("kind") == "assert" and step.get("constraint_id")
+    }
+    return [constraint.id for constraint in requirement.constraints if constraint.id not in covered]
+
+
+def annotate_coverage(plan: dict[str, Any], requirement: Requirement) -> dict[str, Any]:
+    """Stamp uncovered C-* onto plan.json. Missing coverage must not disappear."""
+    annotated = dict(plan)
+    annotated["uncovered_constraints"] = uncovered_constraint_ids(requirement, plan)
+    return annotated
+
+
+def compile_ir(
+    ir: VerificationIr,
     requirement: Requirement,
     mode: str,
     base_url: str,
     actor: dict[str, str],
     routes: dict[str, dict[str, str]] | None = None,
 ) -> dict[str, Any]:
-    """Parse, validate, normalize, and compile a declared Verification IR."""
-    if mode not in ALLOWED_KINDS:
-        raise IrError(f"unknown verify mode: {mode}")
-    if not isinstance(verification, dict):
-        raise IrError("verification must be a mapping")
-    version = _ir_version(verification)
-    steps_in = verification.get("steps")
-    if steps_in is None:
-        steps_in = []
-    if not isinstance(steps_in, list):
-        raise IrError("verification.steps must be a list")
+    """Fourth pipeline stage: Verification IR → existing plan.json kinds."""
     allowed_ids = {c.id for c in requirement.constraints}
     actor = {"email": actor["email"], "password": actor["password"]}
     cleaned: list[dict[str, Any]] = []
-    for index, item in enumerate(steps_in, start=1):
-        if not isinstance(item, dict):
-            raise IrError(f"verification step {index} must be a mapping")
-        item = normalize_templates(item, actor)
-        flat = _flatten_yaml_step(item)
-        step = sanitize_step(flat, allowed_ids, mode, base_url, strict=True)
-        if step is None:
-            raise IrError(f"verification step {index} failed the allowlist")
-        declared = str(item.get("id") or "").strip()
-        step["id"] = declared if declared else f"S-{index:03d}"
-        cleaned.append(step)
-    seen: set[str] = set()
-    for i, step in enumerate(cleaned, start=1):
-        sid = str(step["id"])
-        if sid in seen:
-            step["id"] = f"S-{i:03d}"
-        seen.add(step["id"])
-    return {
+    for step in ir.steps:
+        raw = {"kind": step.kind, "constraint_id": step.constraint_id, **step.fields}
+        compiled = sanitize_step(raw, allowed_ids, mode, base_url, strict=True)
+        if compiled is None:
+            raise IrError(f"verification step {step.id} failed the allowlist")
+        compiled["id"] = step.id
+        cleaned.append(compiled)
+    plan = {
         "requirement_id": requirement.id,
         "mode": mode,
         "runner": RUNNER[mode],
@@ -296,5 +380,21 @@ def compile_verification(
         "routes": routes or {},
         "steps": cleaned,
         "planner": "ir",
-        "verification_version": version,
+        "verification_version": ir.version,
     }
+    return annotate_coverage(plan, requirement)
+
+
+def compile_verification(
+    verification: Any,
+    requirement: Requirement,
+    mode: str,
+    base_url: str,
+    actor: dict[str, str],
+    routes: dict[str, dict[str, str]] | None = None,
+) -> dict[str, Any]:
+    """Parse → validate schema → normalize → compile → plan.json."""
+    parsed = parse_verification(verification)
+    ir = validate_verification(parsed, requirement, mode)
+    ir = normalize_verification(ir, actor)
+    return compile_ir(ir, requirement, mode, base_url, actor, routes)

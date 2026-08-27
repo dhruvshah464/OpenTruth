@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from opentruth.discovery import load_environment
-from opentruth.ir import IrError
+from opentruth.ir import IrError, annotate_coverage
 from opentruth.llm import build_plan
 from opentruth.requirement import load_requirement_document
 from opentruth.runners.browser import execute_plan
@@ -39,7 +39,7 @@ def _ensure_coverage(store: RunStore, requirement) -> None:
                 "constraint_id": constraint.id,
                 "step_id": None,
                 "check": "coverage",
-                "expect": "executable verification",
+                "expect": "observation and assertion evidence",
                 "cites": [],
                 "result": INCONCLUSIVE,
                 "detail": f"no executable verification for {constraint.id}",
@@ -126,14 +126,17 @@ def verify(
             reachable = wait_health(health_url(env), env.ready_timeout)
 
         if not reachable:
-            plan = {
-                "requirement_id": requirement.id,
-                "mode": mode,
-                "actor": None,
-                "base_url": env.url,
-                "steps": [],
-                "note": "application not reachable",
-            }
+            plan = annotate_coverage(
+                {
+                    "requirement_id": requirement.id,
+                    "mode": mode,
+                    "actor": None,
+                    "base_url": env.url,
+                    "steps": [],
+                    "note": "application not reachable",
+                },
+                requirement,
+            )
             store.write_json("plan.json", plan)
             _inconclusive_all(store, requirement, f"health check failed: {health_url(env)}")
         else:
@@ -149,18 +152,22 @@ def verify(
                     verification=document.verification,
                 )
             except IrError as exc:
-                plan = {
-                    "requirement_id": requirement.id,
-                    "mode": mode,
-                    "planner": "ir",
-                    "actor": None,
-                    "base_url": env.url,
-                    "steps": [],
-                    "ir_error": str(exc)[:500],
-                }
+                plan = annotate_coverage(
+                    {
+                        "requirement_id": requirement.id,
+                        "mode": mode,
+                        "planner": "ir",
+                        "actor": None,
+                        "base_url": env.url,
+                        "steps": [],
+                        "ir_error": str(exc)[:500],
+                    },
+                    requirement,
+                )
                 store.write_json("plan.json", plan)
                 _inconclusive_all(store, requirement, f"verification IR rejected: {exc}")
             else:
+                plan = annotate_coverage(plan, requirement)
                 store.write_json("plan.json", plan)
                 try:
                     if mode == "api":
