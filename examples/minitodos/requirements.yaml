@@ -1,0 +1,74 @@
+requirement: "A user can create, list, and complete a todo."
+constraints:
+  - statement: "Empty titles are rejected."
+  - statement: "Completing an existing todo persists completion."
+  - statement: "Completing an unknown todo returns 404."
+verification:
+  version: 1
+  steps:
+    - id: S-1
+      constraint: C-0
+      http_request:
+        method: POST
+        path: /api/todos
+        json:
+          id: t-1
+          title: Buy milk
+    - id: S-2
+      constraint: C-0
+      assert:
+        check: status_equals
+        expect: "201"
+    - id: S-3
+      constraint: C-0
+      http_request:
+        method: GET
+        path: /api/todos
+    - id: S-4
+      constraint: C-0
+      assert:
+        check: json_contains
+        expect: "Buy milk"
+    - id: S-5
+      constraint: C-1
+      http_request:
+        method: POST
+        path: /api/todos
+        json:
+          id: t-empty
+          title: ""
+    - id: S-6
+      constraint: C-1
+      assert:
+        check: status_equals
+        expect: "400"
+    - id: S-7
+      constraint: C-2
+      http_request:
+        method: POST
+        path: /api/todos/t-1/complete
+    - id: S-8
+      constraint: C-2
+      assert:
+        check: status_equals
+        expect: "200"
+    - id: S-9
+      constraint: C-2
+      http_request:
+        method: GET
+        path: /api/todos
+    - id: S-10
+      constraint: C-2
+      assert:
+        check: json_contains
+        expect: '"done":true'
+    - id: S-11
+      constraint: C-3
+      http_request:
+        method: POST
+        path: /api/todos/no-such/complete
+    - id: S-12
+      constraint: C-3
+      assert:
+        check: status_equals
+        expect: "404"

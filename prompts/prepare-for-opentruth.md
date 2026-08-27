@@ -1,9 +1,9 @@
 # Prepare this application for independent OpenTruth verification
 
+This is a **builder interoperability contract**, not a convenience wrapper and not an SDK. Coding agents (Cursor, Claude, Gemini, and others) produce **declarations only**. OpenTruth remains an independent executable. The prompt below is the first implementation of that contract.
+
 Copy everything below the line into Cursor, Claude, Gemini, or another coding agent.
 Paste it in the repository of the **application to be verified**, not inside the OpenTruth engine.
-
-This is a **declaration / adapter** prompt. It does not install OpenTruth into the app, does not modify the verifier, and does not produce a verdict.
 
 ---
 

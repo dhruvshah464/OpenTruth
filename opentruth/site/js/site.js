@@ -18,10 +18,18 @@ function navHtml(path) {
     const active = path === href ? " is-active" : "";
     return `<a class="${active.trim()}" href="${href}">${label}</a>`;
   }).join("");
-  return `<header class="nav">
+  return `<a class="skip" href="#main">Skip to content</a>
+  <div class="mast">
+    <div class="wrap mast-inner">
+      <span>Independent verification protocol</span>
+      <span class="mast-mid">Verifier ≠ Builder</span>
+      <span>v0.1 freeze · v0.2 IR · v0.3 MiniTodos</span>
+    </div>
+  </div>
+  <header class="nav">
     <div class="wrap nav-inner">
       <a class="brand" href="/">${SEAL}<span>OpenTruth</span></a>
-      <button class="nav-toggle" type="button" data-nav-toggle>Menu</button>
+      <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-label="Open menu">Menu</button>
       <nav class="nav-links" data-nav-links>
         ${links}
         <span class="engine-flag"><span class="status-dot" data-engine-dot></span><span data-engine-label>Engine</span></span>
@@ -33,8 +41,29 @@ function navHtml(path) {
 
 function footerHtml() {
   return `<footer class="footer">
+    <div class="wrap footer-lab">
+      <div>
+        <div class="brand-foot">${SEAL}<span>OpenTruth</span></div>
+        <p>Independent verification protocol. The sealed run is the source of truth. This site is a control surface, not a second engine.</p>
+      </div>
+      <div>
+        <div class="kicker kicker-pad">Surfaces</div>
+        <a href="/engine">Engine</a>
+        <a href="/evidence">Evidence</a>
+        <a href="/console">Console</a>
+        <a href="/docs">Docs</a>
+        <a href="/company">Company</a>
+      </div>
+      <div>
+        <div class="kicker kicker-pad">Status</div>
+        <p class="mono faint">Apache-2.0</p>
+        <p class="mono faint">v0.1 MiniAuth freeze</p>
+        <p class="mono faint">v0.2 Verification IR</p>
+        <p class="mono faint">v0.3 MiniTodos · planner=ir</p>
+      </div>
+    </div>
     <div class="wrap footer-inner">
-      <div>OpenTruth · Independent verification engine · Verifier ≠ Builder</div>
+      <div>Verifier ≠ Builder · Complex protocol. Simple interface.</div>
       <div class="mono">PROVEN is a sealed graph, not a log line.</div>
     </div>
   </footer>`;
@@ -48,7 +77,11 @@ export function mountChrome() {
   if (foot) foot.innerHTML = footerHtml();
   const toggle = document.querySelector("[data-nav-toggle]");
   const links = document.querySelector("[data-nav-links]");
-  toggle?.addEventListener("click", () => links?.classList.toggle("open"));
+  toggle?.addEventListener("click", () => {
+    const open = links?.classList.toggle("open");
+    toggle.setAttribute("aria-expanded", open ? "true" : "false");
+    toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+  });
   fetch("/api/v1/health")
     .then((r) => r.json())
     .then((data) => {

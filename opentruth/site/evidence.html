@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Evidence — OpenTruth</title>
   <meta name="description" content="The sealed run directory is the product. Walk R-1 to E-* and verify SHA-256 hashes."/>
+  <meta name="theme-color" content="#050506"/>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -13,11 +14,11 @@
 </head>
 <body>
   <div id="site-nav"></div>
-  <section class="hero">
+  <section class="hero" id="main">
     <div class="wrap">
       <div class="kicker">Evidence model</div>
       <h1>The run directory is the product.</h1>
-      <p class="lede">Every file is hashed into manifest.json last. JSONL is append-only. IDs are never reused. Tamper any file and the verdict is no longer evidence.</p>
+      <p class="lede">Every file is hashed into manifest.json last. JSONL is append-only. IDs are never reused. Tamper any file and the verdict is no longer evidence. CLI, Action, and this site only display that notebook.</p>
     </div>
   </section>
   <section class="section">
@@ -52,6 +53,12 @@
           <h2>Hashes, then the word PROVEN.</h2>
           <p class="muted">Confidence is passed / conclusive assertions. INCONCLUSIVE is excluded from the denominator so a crash cannot look like a product failure. That is the analogue of distinguishing verifier-inability from product-failure.</p>
         </div>
+      </div>
+      <div class="ticks">
+        <div class="tick"><strong>Coverage</strong><span>Every declared C-* must produce assertion evidence.</span></div>
+        <div class="tick"><strong>Chain</strong><span>R → C → A / O / E is walkable by a stranger.</span></div>
+        <div class="tick"><strong>Seal</strong><span>manifest.json hashes every file, written last.</span></div>
+        <div class="tick"><strong>Verdict</strong><span>Rolled from E-* only. Never a model’s last sentence.</span></div>
       </div>
     </div>
   </section>

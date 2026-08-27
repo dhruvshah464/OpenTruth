@@ -4,7 +4,8 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Engine — OpenTruth</title>
-  <meta name="description" content="Six proof layers writing the same sealed evidence graph. Browser, API, state, diff, CI, and AI-assisted planning."/>
+  <meta name="description" content="Six proof layers writing the same sealed evidence graph. Two planners. One machinery."/>
+  <meta name="theme-color" content="#050506"/>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -13,11 +14,35 @@
 </head>
 <body>
   <div id="site-nav"></div>
-  <section class="hero">
+  <section class="hero" id="main">
     <div class="wrap">
-      <div class="kicker">Product · Engine</div>
+      <div class="kicker">Engine</div>
       <h1>One closed loop.<br/>Six kinds of proof.</h1>
       <p class="lede">Requirement and declared environment → Verification IR or expander → plan.json → independent runner → append-only A / O / E records → verdict.json → seal manifest.json. The planner can change; the proof machinery does not.</p>
+    </div>
+  </section>
+  <section class="section">
+    <div class="wrap">
+      <div class="ticks">
+        <div class="tick"><strong>Declare</strong><span>opentruth.yaml · requirements.yaml</span></div>
+        <div class="tick"><strong>Compile</strong><span>IR or expander → plan.json</span></div>
+        <div class="tick"><strong>Operate</strong><span>Independent runner on the live system</span></div>
+        <div class="tick"><strong>Seal</strong><span>A / O / E → E-only verdict → manifest</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="index">Planners</div>
+        <div>
+          <h2>Two paths. Same notebook.</h2>
+          <p class="muted">MiniAuth still uses the auth expander so the v0.1 freeze does not drift. MiniTodos declares Verification IR. Both compile into the same <span class="mono">plan.json</span>.</p>
+        </div>
+      </div>
+      <pre class="graph-sample">MiniAuth   ── expand() ─────────────►  plan.json  ──►  runners  ──►  A/O/E  ──►  seal  ──►  verdict
+MiniTodos  ── verification.version:1 ►  plan.json  ──►  same     ──►  same   ──►  same  ──►  same</pre>
     </div>
   </section>
 
@@ -38,10 +63,10 @@
   <section class="section">
     <div class="wrap">
       <div class="section-head">
-        <div class="index">Not built</div>
+        <div class="index">Discipline</div>
         <div>
-          <h2>The freeze is the product discipline.</h2>
-          <p class="muted">After the six proof layers we do not schedule automatic requirement discovery, unfamiliar-repo analysis, multi-agent verification, production observability, verification marketplaces, enterprise dashboards, or benchmark apps. The protocol evolves through a versioned Verification IR that compiles into the already-working execution plan.</p>
+          <h2>The freeze is the product.</h2>
+          <p class="muted">We do not schedule automatic requirement discovery, unfamiliar-repo analysis, multi-agent verification, production observability, verification marketplaces, enterprise dashboards, hosted URL scanning, or benchmark apps as the next engine step. The protocol evolves without redesigning runners, seal, or E-only <span class="mono">verdict.json</span>.</p>
         </div>
       </div>
     </div>

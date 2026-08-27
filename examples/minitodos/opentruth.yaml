@@ -1,0 +1,4 @@
+start: python app.py
+url: http://127.0.0.1:{port}
+health: /health
+ready_timeout: 20

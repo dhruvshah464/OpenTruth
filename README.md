@@ -18,13 +18,13 @@ evidence chain is intact, and the seal still matches. It is not a log line.
 
 **The planner can change; the notebook machinery does not.**
 
-**Complex protocol. Simple interface.** A founder should not need to learn YAML or the evidence graph before the idea makes sense. The protocol stays rigorous; the product path is: declare what “done” means, declare where the app is, verify, inspect evidence. Coding agents may only **prepare declarations** — they must not modify the verifier or write a verdict. Copy-paste: [`prompts/prepare-for-opentruth.md`](prompts/prepare-for-opentruth.md).
+**Complex protocol. Simple interface.** A founder should not need to learn YAML or the evidence graph before the idea makes sense. The protocol stays rigorous; the product path is: declare what “done” means, declare where the app is, verify, inspect evidence. Coding agents may only **prepare declarations** — they must not modify the verifier or write a verdict. [`prompts/prepare-for-opentruth.md`](prompts/prepare-for-opentruth.md) is the first **builder interoperability contract** (not an SDK the app adopts).
 
 See the **[product report](PRODUCT-REPORT.md)** for the full status: protocol vs product, MiniAuth falsification contract, working conditions, laws, inventory, and roadmap. See [`../ideas/Prove.md`](../ideas/Prove.md) for the **protocol specification**.
 
 ## Status
 
-**v0.1 proof loop established. v0.2 Verification IR implemented. Proof machinery unchanged. Product layer named (docs only).** Headline is reproducible MiniAuth falsification, not a test count. Next engine experiment is a different small app on the IR, without the MiniAuth expander.
+**v0.1 proof loop established. v0.2 Verification IR implemented. v0.3 MiniTodos IR experiment passed. Proof machinery unchanged.** Headline is reproducible falsification (MiniAuth + MiniTodos), not a test count. MiniAuth proves the original protocol (expander). MiniTodos proves the IR is not auth-specific (`planner=ir`, expander never called).
 
 Company site plus live console: `opentruth serve`. The site is a **control surface** for the same engine, not a second verifier. Full write-up:
 **[PRODUCT-REPORT.md](PRODUCT-REPORT.md)**.
@@ -49,6 +49,16 @@ Hash/seal validation must pass. `verdict.json` is derived from E-* only.
 Pytest encodes this in `tests/test_m1_contract.py`. Do not change these outcomes
 when evolving the protocol.
 
+MiniAuth proves the original protocol. MiniTodos proves the IR is not auth-specific:
+
+```bash
+opentruth verify --path examples/minitodos --mode api
+# PARTIALLY_PROVEN  (C-2 fail; planner=ir)
+
+MINITODOS_PERSIST_COMPLETE=1 opentruth verify --path examples/minitodos --mode api
+# PROVEN  (planner=ir)
+```
+
 ## Quick start
 
 ```bash
@@ -67,6 +77,7 @@ CLI:
 opentruth verify --path examples/miniauth
 opentruth verify --path examples/miniauth --mode api
 opentruth verify --path examples/miniauth --mode state
+opentruth verify --path examples/minitodos --mode api
 opentruth explain R-1 --path examples/miniauth
 ```
 
@@ -77,6 +88,14 @@ The MiniAuth fixture plants a session-persist bug. Default verify is
 opentruth verify --path examples/miniauth --persist-session
 opentruth verify --path examples/miniauth --mode api --persist-session
 opentruth verify --path examples/miniauth --mode state --write-identity
+```
+
+MiniTodos plants a complete-persist bug (HTTP 200, `done` stays false). Default
+API verify is **PARTIALLY_PROVEN** (`C-2` fails, `planner=ir`). Disable the plant
+with the env var — not a new CLI flag:
+
+```bash
+MINITODOS_PERSIST_COMPLETE=1 opentruth verify --path examples/minitodos --mode api
 ```
 
 Compare a claimed fix against a prior sealed run:
@@ -147,8 +166,9 @@ verification:
 ```
 
 That block is the protocol path for an external app. MiniAuth's default
-`requirements.yaml` omits it so the v0.1 demo stays on the expander. A coding
-agent may create these files via
+`requirements.yaml` omits it so the v0.1 demo stays on the expander. MiniTodos
+(`examples/minitodos`) **declares** it so v0.3 cannot accidentally use the
+expander. A coding agent may create these files via
 [`prompts/prepare-for-opentruth.md`](prompts/prepare-for-opentruth.md); it must
 not write a verdict. Every declared `C-*` must have executable coverage;
 missing coverage is `INCONCLUSIVE` → requirement `NOT_PROVEN`, never silent

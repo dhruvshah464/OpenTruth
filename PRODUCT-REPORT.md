@@ -28,7 +28,7 @@ verdict
 
 That is the transition. OpenTruth now has a coherent **protocol** story, not only an implementation story.
 
-**Headline proof of correctness is reproducible falsification**, not a test count. Pytest (77 passed, 3 Chromium skipped) is useful engineering evidence. What makes `v0.1.0-m1` meaningful is the MiniAuth behavioral contract below.
+**Headline proof of correctness is reproducible falsification**, not a test count. Pytest (82 passed, 3 Chromium skipped) is useful engineering evidence. What makes `v0.1.0-m1` meaningful is the MiniAuth behavioral contract below. What makes v0.3 meaningful is MiniTodos on the IR path (`planner=ir`).
 
 **Central architecture:** the planner can change; this notebook machinery does not. Do not let the Verification IR become an excuse to redesign `plan.json` or the evidence system.
 
@@ -44,9 +44,9 @@ That is the transition. OpenTruth now has a coherent **protocol** story, not onl
 | Core proof machinery (runners, A/O/E, seal, E-only verdict) | Unchanged |
 | Git tag `v0.1.0-m1` | Cut at `fd5eff4` — MiniAuth freeze, not the IR commits on `main` |
 | Product principle | **Complex protocol. Simple interface.** Named; interfaces not built beyond CLI / Action / MiniAuth console |
-| v0.3 generic app (IR, no expander) | Next **engine** experiment — not started this pass |
+| v0.3 MiniTodos (IR, no expander) | Established — planted PARTIAL (C-2), fixed PROVEN, `planner=ir`, expander never called |
 
-Supporting engineering evidence: 77 tests passed (`pytest -m "not browser"`); 3 Chromium tests skipped on purpose; 80 collected. Do not treat that count as the headline.
+Supporting engineering evidence: 82 tests passed (`pytest -m "not browser"`); 3 Chromium tests skipped on purpose; 85 collected. Do not treat that count as the headline.
 
 ---
 
@@ -182,7 +182,7 @@ evidence + verdict
 agent may fix; OpenTruth re-verifies
 ```
 
-Copy-paste prompt: [`prompts/prepare-for-opentruth.md`](prompts/prepare-for-opentruth.md). It must not say “install OpenTruth into this repo” or “make the project use OpenTruth.” The builder prepares an adapter layer. The verifier stays an independent executable.
+Copy-paste prompt: [`prompts/prepare-for-opentruth.md`](prompts/prepare-for-opentruth.md). It is the first **builder interoperability contract** (Claude / Cursor / Gemini → declarations → protocol), not a convenience wrapper and not an SDK. It must not say “install OpenTruth into this repo.” The builder prepares an adapter layer. The verifier stays an independent executable.
 
 ### Three future targets (not implemented)
 
@@ -350,6 +350,7 @@ Shipped and frozen in place:
 - [x] v0.1.0-m1 MiniAuth acceptance contract in pytest (outcomes, not live run ids)
 - [x] v0.2 Verification IR — versioned typed steps compile to existing `plan.json`
 - [x] Coverage law — every declared `C-*` must produce assertion evidence or the requirement is `NOT_PROVEN`
+- [x] v0.3 MiniTodos — IR + API + Diff; `planner=ir`; expander never called; planted C-2 fail is PARTIAL
 
 ### v0.1.0-m1 acceptance contract (permanent)
 
@@ -360,6 +361,27 @@ Clones get new run ids. The contract is the **outcomes** below. Future protocol 
 | `verify` MiniAuth API (planted) | `PARTIALLY_PROVEN` | C-3 fail; other C-* pass. Seal/hash pass. Verdict from E-* only. |
 | same with `--persist-session` | `PROVEN` | All C-* pass. |
 | `diff` planted → persist-session | `PROVEN` | C-3 IMPROVED; others UNCHANGED. |
+
+### v0.3 MiniTodos contract (protocol experiment, not a second demo)
+
+MiniTodos is a tiny create/list/complete app with **no OpenTruth runtime** in the fixture. Its YAML **must** declare `verification.version: 1`. The plant: `POST /api/todos/{id}/complete` returns HTTP 200 but `done` stays false unless `MINITODOS_PERSIST_COMPLETE=1`. Encoded in `tests/test_v03_minitodos.py`.
+
+```
+R-1  A user can create, list, and complete a todo.
+ C-0  create (happy path)
+ C-1  empty titles rejected
+ C-2  completing persists          ← planted fail
+ C-3  unknown id returns 404
+```
+
+| What you run | Overall word | What the checks say |
+|---|---|---|
+| `verify` MiniTodos API (planted) | `PARTIALLY_PROVEN` | C-0/C-1/C-3 pass; **C-2 fail**. `planner=ir`. `expand()` never called. |
+| same with `MINITODOS_PERSIST_COMPLETE=1` | `PROVEN` | All C-* pass. Still `planner=ir`. |
+| `diff` planted → persist-complete | `PROVEN` | C-2 IMPROVED; others UNCHANGED. |
+| YAML with `verification` stripped | not `PROVEN` | `planner=deterministic`; happy path **FAILED** (MiniAuth routes against a todo app). |
+
+Same runners, evidence, seal, and E-only verdict as MiniAuth. Different application, requirements, and planning path.
 
 ### MiniAuth: yes, no, and “could not look”
 
@@ -412,6 +434,13 @@ There is no login website. An outside user installs the engine on their machine 
 | `opentruth explain C-3 --path examples/miniauth` | Walk: GET `/api/me` after login is 401 |
 | `opentruth serve` | Site at `http://127.0.0.1:8787` |
 
+MiniTodos (IR path — not the console):
+
+| Command | What you should see |
+|---|---|
+| `opentruth verify --path examples/minitodos --mode api` | PARTIALLY_PROVEN · C-2 FAIL · `planner=ir` |
+| `MINITODOS_PERSIST_COMPLETE=1 opentruth verify --path examples/minitodos --mode api` | PROVEN · `planner=ir` |
+
 ### 2. Point it at another app
 
 Paste [`prompts/prepare-for-opentruth.md`](prompts/prepare-for-opentruth.md) into Cursor, Claude, or Gemini. The coding agent may create **declarations only**:
@@ -463,6 +492,7 @@ Same checkbox on the console. Same `llm: true` on the Action. Default verify wit
 | Console subject | `examples/miniauth` only |
 | Declared files | `opentruth.yaml` + `requirements.yaml` (state: `requirements-state.yaml`) |
 | MiniAuth default YAML | No `verification` block — expander compatibility path |
+| MiniTodos YAML | `verification.version: 1` required — IR path; no expander |
 | LLM | Optional key; fallback if missing or down |
 | CI Python | 3.12 in GitHub Actions |
 | Release tag | `v0.1.0-m1` at `fd5eff4` (MiniAuth freeze; IR is later on `main`) |
@@ -578,7 +608,7 @@ Folder `.opentruth/runs/<id>/` (the website uses `.opentruth/web-runs/`). JSONL 
 
 | Path | Job |
 |---|---|
-| `prompts/prepare-for-opentruth.md` | Copy-paste prompt: builder creates declarations only |
+| `prompts/prepare-for-opentruth.md` | First builder interoperability contract: declarations only |
 
 ### Website pages
 
@@ -633,7 +663,7 @@ Folder `.opentruth/runs/<id>/` (the website uses `.opentruth/web-runs/`). JSONL 
 
 ### Automated tests by surface (supporting evidence, 27 Aug 2026)
 
-Not the headline. Headline is the MiniAuth falsification contract. These counts are engineering coverage of that machinery: 80 collected · 77 passed with `-m "not browser"` · 3 Chromium tests deselected.
+Not the headline. Headline is MiniAuth + MiniTodos falsification. These counts are engineering coverage: 85 collected · 82 passed with `-m "not browser"` · 3 Chromium tests deselected.
 
 | Surface | Test functions |
 |---|---|
@@ -646,20 +676,18 @@ Not the headline. Headline is the MiniAuth falsification contract. These counts 
 | M6 LLM plan | 12 |
 | Verification IR | 19 |
 | M1 contract | 4 |
+| v0.3 MiniTodos | 5 |
 | Site | 4 |
 
 ---
 
 ## Future tasks
 
-The remaining major question is no longer “can OpenTruth work?” That is demonstrated. Two questions sit in front:
+The protocol question “does OpenTruth generalize beyond MiniAuth?” has a first yes: MiniTodos is verified through declared IR into the **same** runners, evidence, seal, and E-only verdicts, with `planner=ir` and `expand()` never called. The remaining product question is whether a founder can reach that without learning the notebook.
 
-1. **Protocol:** does OpenTruth generalize beyond MiniAuth? (IR, no auth expander, a different small app.)
-2. **Product:** can a founder give OpenTruth a running app and a claim without learning the notebook? (Interfaces around the same verifier.)
+Usability is **named early**. It is not an excuse to change runners, seal, or `verdict.json`. Do not add `--url`, MiniShop, or a second console subject on the back of this experiment.
 
-Usability is **named early**. It is not an excuse to change runners, seal, or `verdict.json`. Versions are not sacred. Product usability does not wait until the protocol is “complete,” but this pass is **docs only** — no `--url`, no second demo app, no hosted scanner.
-
-Treat `v0.1.0-m1` as the **frozen falsifiable experiment**. Treat IR as **v0.2**. The prompt in `prompts/` is the first product-layer artifact.
+Treat `v0.1.0-m1` as the **frozen MiniAuth experiment**. Treat IR as **v0.2**. Treat MiniTodos as **v0.3** (IR generalization). The prompt in `prompts/` is the first **builder interoperability contract**.
 
 ### Roadmap (protocol core unchanged; interfaces evolve)
 
@@ -667,7 +695,8 @@ Treat `v0.1.0-m1` as the **frozen falsifiable experiment**. Treat IR as **v0.2**
 |---|---|---|
 | v0.1.0-m1 | Frozen MiniAuth falsifiable experiment | Done (`v0.1.0-m1` → `fd5eff4`) |
 | v0.2 | Versioned Verification IR compiling into existing `plan.json` | Done |
-| v0.3 | Independent generic app verification (IR only, no auth expander) | Next **engine** experiment — not started |
+| v0.3 | Independent generic app verification (MiniTodos, IR only, no auth expander) | Done |
+| v0.4 | Zero-config bootstrap: “Prepare this application for independent OpenTruth verification” | Prompt shipped as docs; no CLI/Action change |
 | v0.4 | Zero-config bootstrap: “Prepare this application for independent OpenTruth verification” | Prompt shipped as docs; no CLI/Action change |
 | v0.5 | Local `verify --url` / deployed-app verification (user-controlled install; no hosted crawler) | Not started |
 | v0.6 | Adversarial verification (hostile inputs as declared campaigns) | Not started |
@@ -748,7 +777,7 @@ The website is that engine **served**, not a second verifier. If a change does n
 
 ## Assessment
 
-The remaining major question is no longer “Can OpenTruth work?” You have demonstrated that. Next: does the protocol generalize beyond MiniAuth, and can the **product layer** hide the notebook without owning the proof. The Verification IR is the bridge. The bootstrap prompt is the first interface artifact. Neither may compromise M1.
+The remaining product question is whether the **product layer** can hide the notebook without owning the proof. Protocol generalization past MiniAuth is demonstrated on MiniTodos (`planner=ir`). The Verification IR is the bridge. The bootstrap prompt is the first builder contract. Neither may compromise M1.
 
 | Foundation | Status |
 |---|---|
@@ -763,6 +792,7 @@ The remaining major question is no longer “Can OpenTruth work?” You have dem
 | LLM separation | Yes |
 | Versioned Verification IR | Yes |
 | Protocol/document boundary | Yes |
-| Protocol vs product distinction | Yes (this pass; docs only) |
-| Prepare-for-OpenTruth prompt | Yes (`prompts/prepare-for-opentruth.md`) |
+| Protocol vs product distinction | Yes |
+| MiniTodos IR generalization | Yes (`planner=ir`; expander never called) |
+| Prepare-for-OpenTruth prompt | Yes (builder interoperability contract) |
 | Reproducible release target | Yes (`v0.1.0-m1` at `fd5eff4`) |

@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Docs — OpenTruth</title>
   <meta name="description" content="Install OpenTruth, run verify, explain, diff, pack, and serve the product site."/>
+  <meta name="theme-color" content="#050506"/>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -13,11 +14,21 @@
 </head>
 <body>
   <div id="site-nav"></div>
-  <section class="hero">
+  <section class="hero" id="main">
     <div class="wrap">
       <div class="kicker">Documentation</div>
       <h1>CLI, CI, and this site.</h1>
-      <p class="lede">The sealed run is the source of truth. CLI, CI, and this site are control surfaces of the same engine. Headline is reproducible MiniAuth falsification, not a test count. Declared Verification IR is the protocol path; the MiniAuth expander is compatibility. A coding agent may prepare declarations; <span class="mono">verify</span> still runs independently.</p>
+      <p class="lede">The sealed run is the source of truth. CLI, CI, and this site are control surfaces of the same engine. MiniAuth proves the original protocol. MiniTodos proves the Verification IR is not auth-specific. A coding agent may prepare declarations; <span class="mono">verify</span> still runs independently.</p>
+    </div>
+  </section>
+  <section class="section">
+    <div class="wrap">
+      <div class="ticks">
+        <div class="tick"><strong>CLI</strong><span>opentruth verify · explain · diff · pack</span></div>
+        <div class="tick"><strong>Action</strong><span>Same engine in CI. Exit 0 only if PROVEN.</span></div>
+        <div class="tick"><strong>Console</strong><span>MiniAuth only. Control surface, not a second verifier.</span></div>
+        <div class="tick"><strong>Contract</strong><span>prompts/prepare-for-opentruth.md — declarations only.</span></div>
+      </div>
     </div>
   </section>
   <section class="section">
@@ -35,6 +46,7 @@ opentruth serve</pre>
         <pre class="code">opentruth verify --path examples/miniauth
 opentruth verify --path examples/miniauth --mode api
 opentruth verify --path examples/miniauth --mode state
+opentruth verify --path examples/minitodos --mode api
 opentruth explain R-1 --path examples/miniauth</pre>
       </div>
       <div>
@@ -106,7 +118,7 @@ opentruth explain R-1 --path examples/miniauth
   <section class="section">
     <div class="wrap">
       <h2>Declared environment only</h2>
-      <p class="muted">OpenTruth reads <span class="mono">opentruth.yaml</span> and <span class="mono">requirements.yaml</span>. It does not reverse-engineer unfamiliar repositories. That freeze is intentional. To prepare another app, paste the copy-paste prompt (in the repo: <span class="mono">prompts/prepare-for-opentruth.md</span>) into a coding agent so it writes <em>declarations only</em>. Then run <span class="mono">opentruth verify</span> outside the agent. The builder must not modify the verifier or write a verdict.</p>
+      <p class="muted">OpenTruth reads <span class="mono">opentruth.yaml</span> and <span class="mono">requirements.yaml</span>. It does not reverse-engineer unfamiliar repositories. That freeze is intentional. MiniTodos (<span class="mono">examples/minitodos</span>) is the IR generalization experiment — same engine, declared <span class="mono">verification.version: 1</span>, no MiniAuth expander, console stays MiniAuth-only. To prepare another app, paste the builder interoperability contract (in the repo: <span class="mono">prompts/prepare-for-opentruth.md</span>) into a coding agent so it writes <em>declarations only</em>. Then run <span class="mono">opentruth verify</span> outside the agent. The builder must not modify the verifier or write a verdict.</p>
     </div>
   </section>
   <div id="site-footer"></div>

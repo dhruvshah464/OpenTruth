@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Console — OpenTruth</title>
   <meta name="description" content="Run OpenTruth against MiniAuth. Inspect the sealed evidence graph. Diff two runs."/>
+  <meta name="theme-color" content="#050506"/>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -13,11 +14,21 @@
 </head>
 <body>
   <div id="site-nav"></div>
-  <section class="hero hero-compact">
+  <section class="hero hero-compact" id="main">
     <div class="wrap">
       <div class="kicker">Live engine</div>
       <h1>Verification console</h1>
-      <p class="lede">This console runs the real OpenTruth engine against MiniAuth. It does not write tests into that app. The working loop is planted bug → claimed fix → sealed diff.</p>
+      <p class="lede">This console is a control surface for the same engine as the CLI. It runs the real verifier against MiniAuth only. It does not write tests into that app. MiniTodos is the IR experiment on the command line. The working loop is planted bug → claimed fix → sealed diff.</p>
+    </div>
+  </section>
+  <section class="section section-tight">
+    <div class="wrap">
+      <div class="ticks">
+        <div class="tick"><strong>Subject</strong><span>MiniAuth · session plant</span></div>
+        <div class="tick"><strong>Engine</strong><span>Same verifier as the CLI</span></div>
+        <div class="tick"><strong>Loop</strong><span>Planted → claimed fix → sealed diff</span></div>
+        <div class="tick"><strong>Not here</strong><span>MiniTodos · URL scan · hosted SaaS</span></div>
+      </div>
     </div>
   </section>
   <section class="section section-flush">

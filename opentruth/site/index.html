@@ -4,7 +4,8 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>OpenTruth — Independent verification protocol</title>
-  <meta name="description" content="OpenTruth is an open verification protocol for independently establishing software requirements from executable evidence. Verifier ≠ Builder. PROVEN is coverage + assertions + intact chain + valid seal."/>
+  <meta name="description" content="OpenTruth independently establishes software requirements from executable evidence. Verifier ≠ Builder. PROVEN is coverage, assertions, an intact chain, and a valid seal."/>
+  <meta name="theme-color" content="#050506"/>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -14,23 +15,24 @@
 <body>
   <div id="site-nav"></div>
 
-  <section class="hero">
+  <section class="hero" id="main">
     <div class="wrap hero-grid">
       <div>
-        <div class="kicker">Open verification protocol</div>
+        <div class="kicker">Independent verification protocol</div>
         <h1>Did the software actually satisfy the requirement?</h1>
-        <p class="lede">OpenTruth independently establishes software requirements from executable evidence. AI-built software is the urgent case. The protocol still applies when the builder is human. The planner can change; the notebook does not. This site is a control surface for that engine — the MiniAuth console is not a different verifier.</p>
+        <p class="lede">OpenTruth is the verifier, never the builder. It operates the running system, records a hash-sealed evidence graph, and returns a verdict. AI-built software is the urgent case. The protocol still applies when the builder is human. This site is a control surface for that engine — not a second OpenTruth.</p>
         <div class="actions">
           <a class="btn" href="/console">Open the console</a>
-          <a class="btn ghost" href="/evidence">Read the evidence model</a>
+          <a class="btn ghost" href="/docs">Install the CLI</a>
         </div>
       </div>
       <aside class="hero-aside">
         <div class="kicker kicker-pad">Live engine</div>
-        <div class="meta-row"><span>Subject</span><span>MiniAuth</span></div>
+        <div class="meta-row"><span>Console subject</span><span>MiniAuth</span></div>
         <div class="meta-row"><span>Planted gap</span><span>Session does not persist</span></div>
         <div class="meta-row"><span>Sealed runs</span><span data-live-runs>—</span></div>
         <div class="meta-row"><span>Latest verdict</span><span data-live-verdict>—</span></div>
+        <div class="meta-row"><span>IR experiment</span><span>MiniTodos · planner=ir</span></div>
         <div class="meta-row"><span>Working loop</span><span>planted → fix → diff</span></div>
       </aside>
     </div>
@@ -39,15 +41,44 @@
   <section class="section">
     <div class="wrap">
       <div class="section-head">
-        <div class="index">01 / Thesis</div>
+        <div class="index">01 / Identity</div>
+        <div>
+          <h2>Protocol. Product. Adapter.</h2>
+          <p class="muted">Three parts, one trust boundary. The builder may declare. The engine decides.</p>
+        </div>
+      </div>
+      <div class="identity">
+        <div class="identity-col">
+          <div class="kicker">Protocol</div>
+          <h3>Independent proof</h3>
+          <p>Runners, A/O/E, seal, and E-only verdicts. The planner can change; this machinery does not.</p>
+        </div>
+        <div class="identity-col">
+          <div class="kicker">Product</div>
+          <h3>Simple interfaces</h3>
+          <p>CLI, GitHub Action, and this site call the same verifier. Complex protocol. Simple interface.</p>
+        </div>
+        <div class="identity-col">
+          <div class="kicker">Adapter</div>
+          <h3>Declarations only</h3>
+          <p>A coding agent may prepare YAML. It must not write evidence, hashes, or a verdict.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="index">02 / Thesis</div>
         <div>
           <h2>Verifier ≠ Builder.</h2>
-          <p class="muted">The same agent that shipped the feature is not the entity that decides it works. OpenTruth never writes tests into the target repository. Plans and evidence live only under a hash-sealed run directory. <em>PROVEN</em> is required coverage executed, required assertions established, an intact evidence chain, and a seal that still matches — not a log line.</p>
+          <p class="muted">The same agent that shipped the feature is not the entity that decides it works. OpenTruth never writes tests into the target repository. <em>PROVEN</em> is required coverage executed, required assertions established, an intact evidence chain, and a seal that still matches — not a log line.</p>
         </div>
       </div>
       <ul class="rule-list">
         <li><strong>PROVEN</strong><span>Required coverage executed, required assertions hold, evidence chain intact, seal valid.</span></li>
-        <li><strong>PARTIALLY_PROVEN</strong><span>Happy path holds; at least one constraint fails — as MiniAuth does on session persist.</span></li>
+        <li><strong>PARTIALLY_PROVEN</strong><span>Happy path holds; at least one constraint fails — MiniAuth session, MiniTodos complete-persist.</span></li>
         <li><strong>FAILED</strong><span>The required happy path was observed not to hold.</span></li>
         <li><strong>NOT_PROVEN</strong><span>Not enough evidence to establish the claim. Not the same as FAILED.</span></li>
         <li><strong>INCONCLUSIVE</strong><span>Could not observe (app down, timeout). Not a pass and not a product failure.</span></li>
@@ -58,16 +89,46 @@
   <section class="section">
     <div class="wrap">
       <div class="section-head">
-        <div class="index">02 / Layers</div>
+        <div class="index">03 / Experiments</div>
+        <div>
+          <h2>Two applications. One machinery.</h2>
+          <p class="muted">MiniAuth proves the original protocol. MiniTodos proves the Verification IR is not auth-specific. Same runners, evidence, seal, and verdict engine.</p>
+        </div>
+      </div>
+      <div class="compare">
+        <div class="compare-pane">
+          <div class="kicker">v0.1 · Legacy planner</div>
+          <h3>MiniAuth</h3>
+          <p>Signup / login fixture. Auth expander. Planted session does not persist. Console subject.</p>
+          <pre class="code">opentruth verify --path examples/miniauth --mode api
+# PARTIALLY_PROVEN  C-3 fail
+# planner = deterministic</pre>
+        </div>
+        <div class="compare-pane">
+          <div class="kicker">v0.3 · Verification IR</div>
+          <h3>MiniTodos</h3>
+          <p>Create / list / complete. Declared IR only. Planted complete returns 200 while <span class="mono">done</span> stays false. CLI, not the console.</p>
+          <pre class="code">opentruth verify --path examples/minitodos --mode api
+# PARTIALLY_PROVEN  C-2 fail
+# planner = ir</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="index">04 / Layers</div>
         <div>
           <h2>Six proof layers. One graph.</h2>
-          <p class="muted">Each milestone adds a kind of proof that writes into the same sealed namespaces: R-*, C-*, A-*, O-*, E-*. Nothing else is the product.</p>
+          <p class="muted">Each milestone writes into the same sealed namespaces: R-*, C-*, A-*, O-*, E-*. Nothing else is the product.</p>
         </div>
       </div>
       <div class="grid-3">
         <article class="card"><div class="kicker">M1</div><h3>Browser proof</h3><p>Operate the UI in Chromium. Observable behavior becomes actions, observations, assertions.</p></article>
         <article class="card"><div class="kicker">M2</div><h3>API proof</h3><p>Direct HTTP: valid, invalid, unauthorized, state transitions. Same graph, <span class="mono">kind: http</span>.</p></article>
-        <article class="card"><div class="kicker">M3</div><h3>State proof</h3><p>After the system claims signup succeeded, read durable storage. Invariants, not dashboards.</p></article>
+        <article class="card"><div class="kicker">M3</div><h3>State proof</h3><p>After the system claims success, read durable storage. Invariants, not dashboards.</p></article>
         <article class="card"><div class="kicker">M4</div><h3>Change proof</h3><p>Two sealed runs. What improved, held, or regressed. Differential evidence cites both run IDs.</p></article>
         <article class="card"><div class="kicker">M5</div><h3>Continuous</h3><p>The CLI in CI. Exit code plus a packed sealed run. Still not a service.</p></article>
         <article class="card"><div class="kicker">M6</div><h3>AI-assisted plan</h3><p>An LLM may propose <span class="mono">plan.json</span>. It never writes <span class="mono">verdict.json</span>.</p></article>
@@ -78,7 +139,7 @@
   <section class="section">
     <div class="wrap">
       <div class="section-head">
-        <div class="index">03 / Graph</div>
+        <div class="index">05 / Graph</div>
         <div>
           <h2>A stranger can walk the proof.</h2>
           <p class="muted">If the hashes no longer match, <span class="mono">opentruth explain</span> reports INTEGRITY FAILED. The stored verdict is not authoritative.</p>
@@ -99,13 +160,13 @@
   <section class="section">
     <div class="wrap">
       <div class="section-head">
-        <div class="index">04 / Product</div>
+        <div class="index">06 / Product</div>
         <div>
           <h2>The engine is running.</h2>
-          <p class="muted">This site is not a marketplace. The console executes the real verifier against MiniAuth: planted bug, claimed fix, then a sealed diff. Default single proof is PARTIALLY_PROVEN. The full loop ends PROVEN on the delta.</p>
+          <p class="muted">This site is not a marketplace. The console executes the real verifier against MiniAuth: planted bug, claimed fix, then a sealed diff. MiniTodos is the IR experiment on the CLI. Default MiniAuth proof is PARTIALLY_PROVEN. The full loop ends PROVEN on the delta.</p>
           <div class="actions">
             <a class="btn" href="/console">Run the full proof</a>
-            <a class="btn ghost" href="/docs">Install the CLI</a>
+            <a class="btn ghost" href="/company">The lab</a>
           </div>
         </div>
       </div>

@@ -4,7 +4,8 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Company — OpenTruth</title>
-  <meta name="description" content="OpenTruth is an independent verification lab. Deep-tech, not a dashboard company."/>
+  <meta name="description" content="OpenTruth is an independent verification lab. Deep-tech protocol, not a dashboard company."/>
+  <meta name="theme-color" content="#050506"/>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -13,11 +14,21 @@
 </head>
 <body>
   <div id="site-nav"></div>
-  <section class="hero">
+  <section class="hero" id="main">
     <div class="wrap">
-      <div class="kicker">Company</div>
+      <div class="kicker">Laboratory</div>
       <h1>A verification lab,<br/>not a SaaS backlog.</h1>
-      <p class="lede">OpenTruth is an open verification protocol for independently establishing software requirements from executable evidence. AI-built software made the gap urgent. The protocol remains useful when the builder is human. Nearby slots — test generators, claim checkers, spec gates, formal methods — are occupied. The unoccupied gap is live operation of the product, with a walkable, hash-sealed graph. This website is a control surface for that engine, not a second verifier.</p>
+      <p class="lede">OpenTruth is an open verification protocol for independently establishing software requirements from executable evidence. Nearby slots — test generators, claim checkers, spec gates, formal methods — are occupied. The unoccupied gap is live operation of the product, with a walkable, hash-sealed graph. This website is a control surface for that engine, not a second verifier.</p>
+    </div>
+  </section>
+  <section class="section">
+    <div class="wrap">
+      <div class="ticks">
+        <div class="tick"><strong>v0.1</strong><span>MiniAuth freeze. Falsifiable planted session.</span></div>
+        <div class="tick"><strong>v0.2</strong><span>Versioned Verification IR into existing plan.json.</span></div>
+        <div class="tick"><strong>v0.3</strong><span>MiniTodos. planner=ir. Expander never called.</span></div>
+        <div class="tick"><strong>Next</strong><span>Builder contract in product. Local --url later.</span></div>
+      </div>
     </div>
   </section>
   <section class="section">
@@ -38,8 +49,43 @@
   </section>
   <section class="section">
     <div class="wrap">
+      <div class="section-head">
+        <div class="index">Laws</div>
+        <div>
+          <h2>Eleven laws. Not slogans.</h2>
+          <p class="muted">Implementation follows the protocol specification. These do not weaken so the product can look simpler.</p>
+        </div>
+      </div>
+      <ul class="law-grid">
+        <li><strong>01</strong>Verifier ≠ Builder</li>
+        <li><strong>02</strong>Verdict ≠ model opinion</li>
+        <li><strong>03</strong>Evidence is inspectable</li>
+        <li><strong>04</strong>Evidence is integrity-protected</li>
+        <li><strong>05</strong>Failed verification ≠ software failure</li>
+        <li><strong>06</strong>Inconclusive ≠ proven</li>
+        <li><strong>07</strong>Requirements are explicit</li>
+        <li><strong>08</strong>Verdicts are reproducible</li>
+        <li><strong>09</strong>AI may propose; machinery decides</li>
+        <li><strong>10</strong>Every claim points to evidence</li>
+        <li><strong>11</strong>The planner can change; the notebook does not</li>
+        <li><strong>—</strong>Apache-2.0 · local engine · no hosted scanner</li>
+      </ul>
+    </div>
+  </section>
+  <section class="section">
+    <div class="wrap">
       <h2>What we will not become</h2>
-      <p class="muted">Automatic requirement discovery, unfamiliar repository analysis, multi-agent verification, production observability, verification marketplaces, enterprise dashboards. Named so the lab stays an engine.</p>
+      <p class="muted">Named so the lab stays an engine.</p>
+      <ul class="refuse">
+        <li>Automatic requirement discovery</li>
+        <li>Unfamiliar repository analysis</li>
+        <li>Multi-agent verification</li>
+        <li>Production observability dashboards</li>
+        <li>Verification marketplaces</li>
+        <li>Enterprise SaaS as the product</li>
+        <li>Hosted URL scanning</li>
+        <li>Running the builder’s tests as proof</li>
+      </ul>
     </div>
   </section>
   <div id="site-footer"></div>

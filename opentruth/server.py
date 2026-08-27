@@ -309,6 +309,11 @@ def create_app() -> FastAPI:
                 "planted": "Session does not persist; identity row skipped in state mode",
                 "loop": "planted → claimed fix → diff",
             },
+            "identity": ["protocol", "product", "adapter"],
+            "experiments": [
+                {"name": "MiniAuth", "planner": "deterministic", "role": "v0.1 freeze"},
+                {"name": "MiniTodos", "planner": "ir", "role": "v0.3 IR generalization"},
+            ],
         }
 
     @app.get("/api/v1/runs")
