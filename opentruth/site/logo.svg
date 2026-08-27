@@ -1,13 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
-  <rect width="256" height="256" fill="#050506"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none" role="img" aria-label="OpenTruth">
   <path d="M128 24 A104 104 0 1 1 24 128"
-        stroke="#c4a574"
+        stroke="currentColor"
         stroke-width="18"
         stroke-linecap="round"/>
   <path d="M96 96 H176 M136 96 V176"
-        stroke="#c4a574"
+        stroke="currentColor"
         stroke-width="18"
         stroke-linecap="round"
         stroke-linejoin="round"/>
-  <circle cx="68" cy="68" r="12" fill="#c4a574"/>
+  <circle cx="68" cy="68" r="12" fill="currentColor"/>
 </svg>

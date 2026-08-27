@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="opentruth/site/favicon.svg" width="56" height="56" alt="OpenTruth seal"/>
+  <img src="opentruth/site/favicon.svg" width="72" height="72" alt="OpenTruth"/>
 </p>
 
 <h1 align="center">OpenTruth</h1>

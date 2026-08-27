@@ -260,7 +260,7 @@ def create_app() -> FastAPI:
             "form-action 'self'"
         )
         path = request.url.path
-        if path.startswith("/css/") or path.startswith("/js/") or path == "/favicon.svg":
+        if path.startswith("/css/") or path.startswith("/js/") or path in {"/favicon.svg", "/logo.svg"}:
             response.headers["Cache-Control"] = "public, max-age=120"
         elif path.startswith("/api/"):
             response.headers["Cache-Control"] = "no-store"
@@ -497,6 +497,13 @@ def create_app() -> FastAPI:
     @app.get("/favicon.svg")
     def favicon() -> FileResponse:
         path = SITE / "favicon.svg"
+        if not path.is_file():
+            raise HTTPException(404)
+        return FileResponse(path, media_type="image/svg+xml")
+
+    @app.get("/logo.svg")
+    def logo() -> FileResponse:
+        path = SITE / "logo.svg"
         if not path.is_file():
             raise HTTPException(404)
         return FileResponse(path, media_type="image/svg+xml")

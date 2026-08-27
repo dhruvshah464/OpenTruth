@@ -6,11 +6,10 @@ const PAGES = [
   ["/company", "Company"],
 ];
 
-const SEAL = `<svg width="22" height="22" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-  <circle cx="16" cy="16" r="11.2" stroke="#c4a574" stroke-width="1.1"/>
-  <circle cx="16" cy="16" r="7.4" stroke="#c4a574" stroke-width="0.6" opacity="0.7"/>
-  <path d="M16 8.5v15M8.5 16h15" stroke="#c4a574" stroke-width="0.6"/>
-  <circle cx="16" cy="16" r="1.6" fill="#c4a574"/>
+const SEAL = `<svg width="26" height="26" viewBox="0 0 256 256" fill="none" aria-hidden="true">
+  <path d="M128 24 A104 104 0 1 1 24 128" stroke="currentColor" stroke-width="18" stroke-linecap="round"/>
+  <path d="M96 96 H176 M136 96 V176" stroke="currentColor" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="68" cy="68" r="12" fill="currentColor"/>
 </svg>`;
 
 function navHtml(path) {

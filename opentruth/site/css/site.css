@@ -145,8 +145,13 @@ select {
   text-transform: uppercase;
 }
 
-.brand svg {
+.brand svg,
+.brand-foot svg {
   display: block;
+  width: 26px;
+  height: 26px;
+  color: var(--brass);
+  flex-shrink: 0;
 }
 
 .nav-links {
