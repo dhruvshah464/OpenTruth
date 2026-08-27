@@ -100,33 +100,20 @@ opentruth explain C-2 --path examples/minitodos
 
 ## GitHub Action
 
-CI is the same engine as the CLI. Exit **0** only if `PROVEN`. The sealed run is packed and uploaded as an artifact. This is not a hosted scanner and not a dashboard.
-
-Pin a release for production:
+**OpenTruth Verify** runs the same engine as the CLI against a declared application. Point it at a directory with `opentruth.yaml` and `requirements.yaml`. Exit **0** only if `PROVEN`. The sealed run is packed and uploaded as an artifact. This is not a hosted scanner and not a MiniAuth-only Action.
 
 ```yaml
-- name: OpenTruth
-  uses: dhruvshah464/OpenTruth@v0.1.0-m1
+- name: OpenTruth Verify
+  uses: dhruvshah464/OpenTruth@v0.3.0
   with:
     path: .
     mode: api
 ```
 
-This repository dogfoods the Action against both fixtures (plants disabled so each gate is `PROVEN`). Pin `@v0.1.0-m1` for the MiniAuth freeze; `@main` includes MiniTodos IR.
-
-```yaml
-- uses: dhruvshah464/OpenTruth@v0.1.0-m1
-  with:
-    path: examples/miniauth
-    mode: api
-    persist-session: "true"
-    artifact-name: opentruth-miniauth
-```
-
 Optional: a *different* model than the builder may propose `plan.json`. It cannot write `verdict.json`. Put the key on the **job**, not in the Action:
 
 ```yaml
-- uses: dhruvshah464/OpenTruth@v0.1.0-m1
+- uses: dhruvshah464/OpenTruth@v0.3.0
   with:
     path: .
     mode: api
@@ -138,14 +125,18 @@ Optional: a *different* model than the builder may propose `plan.json`. It canno
 
 If the key is missing, the model is down, or the proposal fails the allowlist, verify still seals: planner stays `deterministic` and `llm_error` is recorded on `plan.json`.
 
+This repository’s own CI dogfoods the Action on MiniAuth and MiniTodos with plants disabled so those jobs exit `PROVEN`. Fixture inputs (`persist-session`, `write-identity`) and `MINITODOS_PERSIST_COMPLETE` are for those demos only — not part of verifying some other app.
+
+The MiniAuth freeze tag remains [`v0.1.0-m1`](https://github.com/dhruvshah464/OpenTruth/releases/tag/v0.1.0-m1). Current protocol milestone: `@v0.3.0`.
+
 ### Inputs
 
 | Input | Default | Description |
 |---|---|---|
 | `path` | `.` | Directory with `opentruth.yaml` and `requirements.yaml` |
 | `mode` | `api` | `browser` · `api` · `state` |
-| `persist-session` | `false` | MiniAuth fixture: disable the session plant |
-| `write-identity` | `false` | MiniAuth fixture: write the identity row |
+| `persist-session` | `false` | Optional MiniAuth demo only. Not used for other apps. |
+| `write-identity` | `false` | Optional MiniAuth demo only. Not used for other apps. |
 | `artifact-name` | `opentruth-run` | Actions artifact name for the packed zip |
 | `python-version` | `3.12` | Python used to install OpenTruth |
 | `llm` | `false` | Propose `plan.json` only (never the verdict) |

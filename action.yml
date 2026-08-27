@@ -14,11 +14,11 @@ inputs:
     required: false
     default: api
   persist-session:
-    description: Set MINIAUTH_PERSIST_SESSION=1 (fixture only)
+    description: Optional MiniAuth demo flag. Not required for other apps.
     required: false
     default: "false"
   write-identity:
-    description: Set MINIAUTH_WRITE_IDENTITY=1 (fixture only)
+    description: Optional MiniAuth demo flag. Not required for other apps.
     required: false
     default: "false"
   artifact-name:
