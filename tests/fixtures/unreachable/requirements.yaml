@@ -1,0 +1,5 @@
+requirement: "A user can create an account and sign in."
+constraints:
+  - duplicate emails rejected
+  - invalid password rejected
+  - session persists after refresh

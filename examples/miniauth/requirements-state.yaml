@@ -1,0 +1,5 @@
+requirement: "A user can create an account and sign in."
+constraints:
+  - account is stored durably
+  - identity record exists for every user
+  - duplicate emails do not create a second row

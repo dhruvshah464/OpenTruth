@@ -1,0 +1,11 @@
+.opentruth/
+.opentruth-tmp/
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.pytest_cache/
+*.sqlite
+.DS_Store
+dist/
+build/

@@ -1,0 +1,17 @@
+start: python app.py
+url: http://127.0.0.1:{port}
+health: /health
+ready_timeout: 20
+api:
+  routes:
+    signup:
+      method: POST
+      path: /api/signup
+    login:
+      method: POST
+      path: /api/login
+    me:
+      method: GET
+      path: /api/me
+state:
+  sqlite: auto

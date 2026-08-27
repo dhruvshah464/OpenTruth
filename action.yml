@@ -1,0 +1,81 @@
+name: OpenTruth Verify
+description: Independently verify a requirement. Uploads the sealed run as a CI artifact. Not a dashboard.
+author: Dhruv Shah
+branding:
+  icon: check-circle
+  color: gray-dark
+inputs:
+  path:
+    description: Directory with opentruth.yaml and requirements.yaml
+    required: false
+    default: "."
+  mode:
+    description: browser, api, or state
+    required: false
+    default: api
+  persist-session:
+    description: Set MINIAUTH_PERSIST_SESSION=1 (fixture only)
+    required: false
+    default: "false"
+  write-identity:
+    description: Set MINIAUTH_WRITE_IDENTITY=1 (fixture only)
+    required: false
+    default: "false"
+  artifact-name:
+    description: GitHub Actions artifact name for the packed run
+    required: false
+    default: opentruth-run
+  python-version:
+    description: Python version used to install OpenTruth
+    required: false
+    default: "3.12"
+outputs:
+  verdict:
+    description: PROVEN, PARTIALLY_PROVEN, FAILED, NOT_PROVEN, or INCONCLUSIVE
+    value: ${{ steps.verify.outputs.verdict }}
+  run-id:
+    description: Sealed run id
+    value: ${{ steps.verify.outputs.run-id }}
+  run-dir:
+    description: Absolute path of the sealed run directory
+    value: ${{ steps.verify.outputs.run-dir }}
+  bundle:
+    description: Path of the packed zip uploaded as the artifact
+    value: ${{ steps.pack.outputs.bundle }}
+runs:
+  using: composite
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+    - name: Install OpenTruth
+      shell: bash
+      run: python -m pip install --quiet "${{ github.action_path }}"
+    - name: Verify
+      id: verify
+      shell: bash
+      run: |
+        extra=()
+        if [ "${{ inputs.persist-session }}" = "true" ]; then
+          extra+=(--persist-session)
+        fi
+        if [ "${{ inputs.write-identity }}" = "true" ]; then
+          extra+=(--write-identity)
+        fi
+        opentruth verify --path "${{ inputs.path }}" --mode "${{ inputs.mode }}" "${extra[@]}"
+    - name: Pack sealed run
+      if: always()
+      id: pack
+      shell: bash
+      run: |
+        bundle="${RUNNER_TEMP}/opentruth-run.zip"
+        opentruth pack --path "${{ inputs.path }}" --out "${bundle}"
+        echo "bundle=${bundle}" >> "${GITHUB_OUTPUT}"
+    - name: Upload sealed run
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: ${{ steps.pack.outputs.bundle }}
+        if-no-files-found: warn
