@@ -42,7 +42,7 @@ That is the transition. OpenTruth now has a coherent **protocol** story, not onl
 | Proof kinds (browser, API, state, diff, CI, LLM-plan) | 6 / 6 shipped |
 | Verification IR (`verification.version: 1`) | Implemented as v0.2 — compiles into existing `plan.json` |
 | Core proof machinery (runners, A/O/E, seal, E-only verdict) | Unchanged |
-| Git tag `v0.1.0-m1` | **Not cut** — that tag should freeze the falsifiable experiment, not the latest IR branch |
+| Git tag `v0.1.0-m1` | Cut at `fd5eff4` — MiniAuth freeze, not the IR commits on `main` |
 | v0.3 generic multi-app verification | **Do not start yet** |
 
 Supporting engineering evidence: 77 tests passed (`pytest -m "not browser"`); 3 Chromium tests skipped on purpose; 80 collected. Do not treat that count as the headline.
@@ -360,7 +360,7 @@ Same checkbox on the console. Same `llm: true` on the Action. Default verify wit
 | MiniAuth default YAML | No `verification` block — expander compatibility path |
 | LLM | Optional key; fallback if missing or down |
 | CI Python | 3.12 in GitHub Actions |
-| Release tag | `v0.1.0-m1` not created until you confirm |
+| Release tag | `v0.1.0-m1` at `fd5eff4` (MiniAuth freeze; IR is later on `main`) |
 
 ### Planner precedence (deterministic)
 
@@ -559,7 +559,7 @@ Treat the git tag `v0.1.0-m1` as the **frozen falsifiable experiment**, not the 
 
 | Version | Task | Status |
 |---|---|---|
-| v0.1.0-m1 | Frozen MiniAuth falsifiable experiment (code + contract tests done; **tag still needs confirm**) | In progress (tag open) |
+| v0.1.0-m1 | Frozen MiniAuth falsifiable experiment | Done (`v0.1.0-m1` → `fd5eff4`) |
 | v0.2 | Versioned Verification IR compiling into existing `plan.json` (bridge built; do not redesign plan/evidence) | Done |
 | *next experiment* | External developer + different small app + IR, no auth expander | Not started — this is the real v0.2 validation |
 | v0.3 | Generic browser / API / state verification for apps that are not MiniAuth-shaped | **Do not start yet** |
@@ -571,7 +571,7 @@ Treat the git tag `v0.1.0-m1` as the **frozen falsifiable experiment**, not the 
 
 ### Do now if you want a frozen release
 
-- [ ] Confirm git tag `v0.1.0-m1` (and push if you want it on the remote)
+- [x] Confirm git tag `v0.1.0-m1` (and push if you want it on the remote)
 - [ ] Optional extra CI job for the 3 Chromium tests (needs Playwright on the runner)
 - [ ] Publish `opentruth` 0.1.0 to PyPI if outsiders should `pip install` without cloning
 
@@ -652,4 +652,4 @@ The remaining major question is no longer “Can OpenTruth work?” You have dem
 | LLM separation | Yes |
 | Versioned Verification IR | Yes |
 | Protocol/document boundary | Yes |
-| Reproducible release target | Yes (tag still to cut) |
+| Reproducible release target | Yes (`v0.1.0-m1` at `fd5eff4`) |
