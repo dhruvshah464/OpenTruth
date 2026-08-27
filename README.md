@@ -44,6 +44,8 @@ PROVEN  =  required coverage executed
 
 ## Contents
 
+- [Roadmap](#roadmap)
+- [First five minutes](#first-five-minutes)
 - [GitHub Action](#github-action)
 - [CLI](#cli)
 - [Verdicts](#verdicts)
@@ -54,6 +56,47 @@ PROVEN  =  required coverage executed
 - [Protocol laws](#protocol-laws)
 - [What this is not](#what-this-is-not)
 - [Status](#status)
+
+## Roadmap
+
+| Version | Proof | Status |
+|---|---|---|
+| **v0.1** | MiniAuth proves falsifiability | Done · tag [`v0.1.0-m1`](https://github.com/dhruvshah464/OpenTruth/releases/tag/v0.1.0-m1) |
+| **v0.2** | Verification IR proves the planner can be separated | Done |
+| **v0.3** | MiniTodos proves IR works outside authentication | This gate |
+| **v0.4** | Builder interoperability / preparation | Not started |
+| **v0.5** | Local remote-URL verification | Not started |
+
+The planner can change; the notebook machinery does not. v0.4 and v0.5 wait until this public clone reproduces the five commands below.
+
+## First five minutes
+
+Two applications. Same engine. MiniAuth is the original falsification proof. MiniTodos is the generic Verification IR proof — not an auth demo, and not the console.
+
+```bash
+pip install -e ".[dev]"
+
+# 1. MiniAuth planted — session does not persist
+opentruth verify --path examples/miniauth --mode api
+# PARTIALLY_PROVEN  C-3 fail
+
+# 2. MiniAuth claimed fix
+opentruth verify --path examples/miniauth --mode api --persist-session
+# PROVEN
+
+# 3. MiniTodos planted — complete returns 200, done stays false
+opentruth verify --path examples/minitodos --mode api
+# PARTIALLY_PROVEN  C-2 fail  planner=ir
+
+# 4. MiniTodos claimed fix
+MINITODOS_PERSIST_COMPLETE=1 opentruth verify --path examples/minitodos --mode api
+# PROVEN  planner=ir
+
+# 5. Read the evidence
+opentruth explain C-2 --path examples/minitodos
+```
+
+`opentruth serve` is a control surface for the same engine. Console subject is MiniAuth only. MiniTodos is CLI / IR.
 
 ## GitHub Action
 
@@ -69,7 +112,7 @@ Pin a release for production:
     mode: api
 ```
 
-This repository dogfoods the Action against MiniAuth (plant disabled so the gate is `PROVEN`):
+This repository dogfoods the Action against both fixtures (plants disabled so each gate is `PROVEN`). Pin `@v0.1.0-m1` for the MiniAuth freeze; `@main` includes MiniTodos IR.
 
 ```yaml
 - uses: dhruvshah464/OpenTruth@v0.1.0-m1
@@ -134,10 +177,10 @@ Required job permission: `contents: read`. Browser mode needs Playwright Chromiu
 ```bash
 pip install -e ".[dev]"
 playwright install chromium          # browser proof only
-opentruth verify --path examples/miniauth --mode api
-opentruth explain C-3 --path examples/miniauth
-opentruth serve                      # http://127.0.0.1:8787
+opentruth serve                      # http://127.0.0.1:8787 — MiniAuth console
 ```
+
+The five-command loop is under [First five minutes](#first-five-minutes). Diff two sealed MiniAuth runs with `opentruth diff <planted> <fixed> --path examples/miniauth` (C-3 `IMPROVED`).
 
 | Command | Job |
 |---|---|
@@ -146,27 +189,6 @@ opentruth serve                      # http://127.0.0.1:8787
 | `opentruth diff <before> <after>` | Differential evidence citing both run ids |
 | `opentruth pack` | Zip a sealed run for CI |
 | `opentruth serve` | Control surface for the same engine (MiniAuth console) |
-
-```bash
-# MiniAuth — planted session does not persist
-opentruth verify --path examples/miniauth --mode api
-# PARTIALLY_PROVEN  C-3 fail
-
-opentruth verify --path examples/miniauth --mode api --persist-session
-# PROVEN
-
-opentruth diff <planted> <fixed> --path examples/miniauth
-# PROVEN  C-3 IMPROVED
-
-# MiniTodos — declared Verification IR (not the console)
-opentruth verify --path examples/minitodos --mode api
-# PARTIALLY_PROVEN  C-2 fail  planner=ir
-
-MINITODOS_PERSIST_COMPLETE=1 opentruth verify --path examples/minitodos --mode api
-# PROVEN  planner=ir
-```
-
-The local site is a **control surface**, not a second verifier and not a cloud account. Console subject is MiniAuth only.
 
 ## Verdicts
 

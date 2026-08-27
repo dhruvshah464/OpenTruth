@@ -206,8 +206,15 @@ def test_action_and_workflow_are_ci_not_saas() -> None:
     workflow = yaml.safe_load(
         (ROOT / ".github" / "workflows" / "opentruth.yml").read_text(encoding="utf-8")
     )
-    assert workflow["jobs"]["verify"]["steps"][-1]["uses"] == "./"
-    assert workflow["jobs"]["verify"]["steps"][-1]["with"]["persist-session"] == "true"
+    verify_steps = workflow["jobs"]["verify"]["steps"]
+    miniauth = next(step for step in verify_steps if step.get("name") == "Prove MiniAuth (API)")
+    minitodos = next(step for step in verify_steps if step.get("name") == "Prove MiniTodos (API IR)")
+    assert miniauth["uses"] == "./"
+    assert miniauth["with"]["path"] == "examples/miniauth"
+    assert miniauth["with"]["persist-session"] == "true"
+    assert minitodos["uses"] == "./"
+    assert minitodos["with"]["path"] == "examples/minitodos"
+    assert minitodos["env"]["MINITODOS_PERSIST_COMPLETE"] == "1"
     assert workflow["jobs"]["test"]["steps"][-1]["run"] == 'pytest -m "not browser" -q'
 
 

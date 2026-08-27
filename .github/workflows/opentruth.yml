@@ -31,3 +31,11 @@ jobs:
           mode: api
           persist-session: "true"
           artifact-name: opentruth-miniauth
+      - name: Prove MiniTodos (API IR)
+        uses: ./
+        with:
+          path: examples/minitodos
+          mode: api
+          artifact-name: opentruth-minitodos
+        env:
+          MINITODOS_PERSIST_COMPLETE: "1"
