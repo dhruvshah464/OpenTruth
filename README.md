@@ -1,152 +1,229 @@
-# OpenTruth
+<p align="center">
+  <img src="opentruth/site/favicon.svg" width="56" height="56" alt="OpenTruth seal"/>
+</p>
 
-An **open verification protocol** for independently establishing software
-requirements from executable evidence.
+<h1 align="center">OpenTruth</h1>
 
-The urgent use case is AI-built software. The protocol is not limited to it.
-The builder may be an AI or a human. OpenTruth is the verifier, never the
-builder.
+<p align="center">
+  <strong>Independent verification protocol.</strong><br/>
+  Did the <em>running system</em> actually satisfy the requirement?
+</p>
 
-Not “did the AI write code?” — **did the running system satisfy the requirement?**
+<p align="center">
+  <a href="https://github.com/dhruvshah464/OpenTruth/actions/workflows/opentruth.yml"><img src="https://github.com/dhruvshah464/OpenTruth/actions/workflows/opentruth.yml/badge.svg" alt="CI"/></a>
+  <a href="https://github.com/dhruvshah464/OpenTruth/releases/tag/v0.1.0-m1"><img src="https://img.shields.io/badge/release-v0.1.0--m1-c4a574?labelColor=111" alt="v0.1.0-m1"/></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-0b3d2e" alt="Apache-2.0"/></a>
+  <img src="https://img.shields.io/badge/python-3.11%2B-3776AB" alt="Python 3.11+"/>
+  <img src="https://img.shields.io/badge/planner-IR%20%7C%20LLM%20%7C%20expander-555" alt="Planners"/>
+</p>
 
-It does not write tests into the target repository. It operates the application,
-records an immutable evidence graph, and returns
-`PROVEN` / `PARTIALLY_PROVEN` / `FAILED` / `NOT_PROVEN` / `INCONCLUSIVE`.
+<p align="center">
+  <code>PROVEN</code> · <code>PARTIALLY_PROVEN</code> · <code>FAILED</code> · <code>NOT_PROVEN</code> · <code>INCONCLUSIVE</code>
+</p>
 
-`PROVEN` means required coverage was executed, required assertions hold, the
-evidence chain is intact, and the seal still matches. It is not a log line.
+---
 
-**The planner can change; the notebook machinery does not.**
+OpenTruth is the **verifier, never the builder**. It starts the application you declare, operates it (browser, HTTP, or durable state), records a hash-sealed evidence graph, and returns a verdict. AI-built software is the urgent case. The protocol still applies when the builder is human.
 
-**Complex protocol. Simple interface.** A founder should not need to learn YAML or the evidence graph before the idea makes sense. The protocol stays rigorous; the product path is: declare what “done” means, declare where the app is, verify, inspect evidence. Coding agents may only **prepare declarations** — they must not modify the verifier or write a verdict. [`prompts/prepare-for-opentruth.md`](prompts/prepare-for-opentruth.md) is the first **builder interoperability contract** (not an SDK the app adopts).
+It does **not** write tests into the target repository. It does **not** run the builder’s tests and stamp `PROVEN`. A coding agent may only [prepare declarations](prompts/prepare-for-opentruth.md). OpenTruth runs **outside** that agent.
 
-See the **[product report](PRODUCT-REPORT.md)** for the full status: protocol vs product, MiniAuth falsification contract, working conditions, laws, inventory, and roadmap. See [`../ideas/Prove.md`](../ideas/Prove.md) for the **protocol specification**.
-
-## Status
-
-**v0.1 proof loop established. v0.2 Verification IR implemented. v0.3 MiniTodos IR experiment passed. Proof machinery unchanged.** Headline is reproducible falsification (MiniAuth + MiniTodos), not a test count. MiniAuth proves the original protocol (expander). MiniTodos proves the IR is not auth-specific (`planner=ir`, expander never called).
-
-Company site plus live console: `opentruth serve`. The site is a **control surface** for the same engine, not a second verifier. Full write-up:
-**[PRODUCT-REPORT.md](PRODUCT-REPORT.md)**.
-
-## v0.1.0-m1 acceptance contract
-
-Permanent MiniAuth regression. Run ids change per clone; **outcomes** do not.
-
-```bash
-opentruth verify --path examples/miniauth --mode api
-# PARTIALLY_PROVEN  (C-3 fail; other C-* pass)
-
-opentruth verify --path examples/miniauth --mode api --persist-session
-# PROVEN
-
-opentruth diff <planted-run-id> <fixed-run-id> --path examples/miniauth
-# PROVEN  (C-3 IMPROVED)
+```
+PROVEN  =  required coverage executed
+        +  required assertions established
+        +  evidence chain intact
+        +  seal / hash valid
 ```
 
-Hash/seal validation must pass. `verdict.json` is derived from E-* only.
-`--llm` without a key still seals (`planner: deterministic`, `llm_error` recorded).
-Pytest encodes this in `tests/test_m1_contract.py`. Do not change these outcomes
-when evolving the protocol.
+**Verifier ≠ Builder.** The planner can change; the notebook machinery does not.
 
-MiniAuth proves the original protocol. MiniTodos proves the IR is not auth-specific:
+| You declare | OpenTruth decides |
+|---|---|
+| What “done” means (`requirements.yaml`) | Whether the running system satisfied it |
+| Where the app is (`opentruth.yaml`) | Independent actions, observations, assertions |
+| Optional Verification IR | `verdict.json` from **E-*** only — never a model’s last sentence |
 
-```bash
-opentruth verify --path examples/minitodos --mode api
-# PARTIALLY_PROVEN  (C-2 fail; planner=ir)
+## Contents
 
-MINITODOS_PERSIST_COMPLETE=1 opentruth verify --path examples/minitodos --mode api
-# PROVEN  (planner=ir)
-```
+- [GitHub Action](#github-action)
+- [CLI](#cli)
+- [Verdicts](#verdicts)
+- [Closed loop](#closed-loop)
+- [Declare an application](#declare-an-application)
+- [Fixtures](#fixtures)
+- [Evidence](#evidence)
+- [Protocol laws](#protocol-laws)
+- [What this is not](#what-this-is-not)
+- [Status](#status)
 
-## Quick start
+## GitHub Action
 
-```bash
-pip install -e ".[dev]"
-playwright install chromium
-pytest
-opentruth serve
-```
+CI is the same engine as the CLI. Exit **0** only if `PROVEN`. The sealed run is packed and uploaded as an artifact. This is not a hosted scanner and not a dashboard.
 
-Open `http://127.0.0.1:8787` — Engine, Evidence, Docs, Company, and a console that
-runs the real verifier against MiniAuth.
-
-CLI:
-
-```bash
-opentruth verify --path examples/miniauth
-opentruth verify --path examples/miniauth --mode api
-opentruth verify --path examples/miniauth --mode state
-opentruth verify --path examples/minitodos --mode api
-opentruth explain R-1 --path examples/miniauth
-```
-
-The MiniAuth fixture plants a session-persist bug. Default verify is
-**PARTIALLY_PROVEN** (`C-3` fails). Disable the bug to see **PROVEN**:
-
-```bash
-opentruth verify --path examples/miniauth --persist-session
-opentruth verify --path examples/miniauth --mode api --persist-session
-opentruth verify --path examples/miniauth --mode state --write-identity
-```
-
-MiniTodos plants a complete-persist bug (HTTP 200, `done` stays false). Default
-API verify is **PARTIALLY_PROVEN** (`C-2` fails, `planner=ir`). Disable the plant
-with the env var — not a new CLI flag:
-
-```bash
-MINITODOS_PERSIST_COMPLETE=1 opentruth verify --path examples/minitodos --mode api
-```
-
-Compare a claimed fix against a prior sealed run:
-
-```bash
-opentruth verify --path examples/miniauth --mode api
-opentruth verify --path examples/miniauth --mode api --persist-session
-opentruth diff <before-run-id> <after-run-id> --path examples/miniauth
-opentruth explain R-1 --path examples/miniauth
-```
-
-## Continuous verification
-
-CI is the CLI, not a service. `PROVEN` exits 0; `INCONCLUSIVE` exits 2; everything
-else exits 1. On GitHub Actions, `verify` writes job outputs and a step summary.
-`opentruth pack` zips the sealed run for `actions/upload-artifact`.
+Pin a release for production:
 
 ```yaml
-- uses: ./
+- name: OpenTruth
+  uses: dhruvshah464/OpenTruth@v0.1.0-m1
+  with:
+    path: .
+    mode: api
+```
+
+This repository dogfoods the Action against MiniAuth (plant disabled so the gate is `PROVEN`):
+
+```yaml
+- uses: dhruvshah464/OpenTruth@v0.1.0-m1
   with:
     path: examples/miniauth
     mode: api
     persist-session: "true"
+    artifact-name: opentruth-miniauth
 ```
 
-Or by hand:
-
-```bash
-opentruth verify --path examples/miniauth --mode api --persist-session
-opentruth pack --path examples/miniauth --out opentruth-run.zip
-```
-
-This repo’s workflow (`.github/workflows/opentruth.yml`) runs `pytest -m "not browser"`
-and the MiniAuth API proof with the planted bug disabled so the engine gate is **PROVEN**.
-
-Optional: ask a *different* model than the builder to propose the plan. The verdict
-is still rolled up from assertions. The model cannot decide PROVEN.
-
-```bash
-export OPENTRUTH_LLM_API_KEY=...
-# optional: export OPENTRUTH_LLM_BASE_URL=https://api.openai.com/v1
-# optional: export OPENTRUTH_LLM_MODEL=gpt-4o-mini
-opentruth verify --path examples/miniauth --mode api --llm --llm-model not-the-builder
-```
-
-If the model is down, the key is missing, or the proposal fails the IR allowlist,
-verify falls back to the deterministic planner and records `llm_error` on `plan.json`.
-
-Declared Verification IR wins over `--llm` and over the auth expander:
+Optional: a *different* model than the builder may propose `plan.json`. It cannot write `verdict.json`. Put the key on the **job**, not in the Action:
 
 ```yaml
+- uses: dhruvshah464/OpenTruth@v0.1.0-m1
+  with:
+    path: .
+    mode: api
+    llm: "true"
+    llm-model: not-the-builder
+  env:
+    OPENTRUTH_LLM_API_KEY: ${{ secrets.OPENTRUTH_LLM_API_KEY }}
+```
+
+If the key is missing, the model is down, or the proposal fails the allowlist, verify still seals: planner stays `deterministic` and `llm_error` is recorded on `plan.json`.
+
+### Inputs
+
+| Input | Default | Description |
+|---|---|---|
+| `path` | `.` | Directory with `opentruth.yaml` and `requirements.yaml` |
+| `mode` | `api` | `browser` · `api` · `state` |
+| `persist-session` | `false` | MiniAuth fixture: disable the session plant |
+| `write-identity` | `false` | MiniAuth fixture: write the identity row |
+| `artifact-name` | `opentruth-run` | Actions artifact name for the packed zip |
+| `python-version` | `3.12` | Python used to install OpenTruth |
+| `llm` | `false` | Propose `plan.json` only (never the verdict) |
+| `llm-model` | `""` | Chat model. Prefer a different model than the builder |
+| `llm-base-url` | `""` | OpenAI-compatible base URL |
+
+### Outputs
+
+| Output | Description |
+|---|---|
+| `verdict` | `PROVEN` · `PARTIALLY_PROVEN` · `FAILED` · `NOT_PROVEN` · `INCONCLUSIVE` |
+| `run-id` | Sealed run id |
+| `run-dir` | Absolute path of the sealed run directory |
+| `bundle` | Path of the packed zip uploaded as the artifact |
+
+### Exit contract
+
+| Code | When |
+|---:|---|
+| **0** | `PROVEN` |
+| **1** | `PARTIALLY_PROVEN` · `FAILED` · `NOT_PROVEN` |
+| **2** | `INCONCLUSIVE` |
+| **3** | Tampered pack / `INTEGRITY FAILED` |
+
+Required job permission: `contents: read`. Browser mode needs Playwright Chromium on the runner; API mode is the CI default.
+
+## CLI
+
+```bash
+pip install -e ".[dev]"
+playwright install chromium          # browser proof only
+opentruth verify --path examples/miniauth --mode api
+opentruth explain C-3 --path examples/miniauth
+opentruth serve                      # http://127.0.0.1:8787
+```
+
+| Command | Job |
+|---|---|
+| `opentruth verify` | Operate the app; seal a run |
+| `opentruth explain <id>` | Walk `R-*` / `C-*` / `A-*` / `O-*` / `E-*`; refuse a tampered pack |
+| `opentruth diff <before> <after>` | Differential evidence citing both run ids |
+| `opentruth pack` | Zip a sealed run for CI |
+| `opentruth serve` | Control surface for the same engine (MiniAuth console) |
+
+```bash
+# MiniAuth — planted session does not persist
+opentruth verify --path examples/miniauth --mode api
+# PARTIALLY_PROVEN  C-3 fail
+
+opentruth verify --path examples/miniauth --mode api --persist-session
+# PROVEN
+
+opentruth diff <planted> <fixed> --path examples/miniauth
+# PROVEN  C-3 IMPROVED
+
+# MiniTodos — declared Verification IR (not the console)
+opentruth verify --path examples/minitodos --mode api
+# PARTIALLY_PROVEN  C-2 fail  planner=ir
+
+MINITODOS_PERSIST_COMPLETE=1 opentruth verify --path examples/minitodos --mode api
+# PROVEN  planner=ir
+```
+
+The local site is a **control surface**, not a second verifier and not a cloud account. Console subject is MiniAuth only.
+
+## Verdicts
+
+| Verdict | Meaning |
+|---|---|
+| **PROVEN** | Required coverage executed, required assertions hold, chain intact, seal valid |
+| **PARTIALLY_PROVEN** | Happy path holds; at least one constraint fails |
+| **FAILED** | The required happy path was observed not to hold |
+| **NOT_PROVEN** | Not enough evidence to establish the claim — **not** FAILED |
+| **INCONCLUSIVE** | Could not observe (app down, timeout, invalid plan) — **not** a pass and **not** a product failure |
+
+`NOT_PROVEN ≠ FAILED`. `INCONCLUSIVE ≠ FAILED`. Inability to look is not a product bug. Confidence = passed / conclusive assertions; `INCONCLUSIVE` is excluded from that fraction.
+
+## Closed loop
+
+```mermaid
+flowchart LR
+  D["opentruth.yaml + requirements.yaml"] --> P["Planner"]
+  P --> IR["Verification IR"]
+  P --> LLM["LLM proposal"]
+  P --> EX["Auth expander"]
+  IR --> PLAN["plan.json"]
+  LLM --> PLAN
+  EX --> PLAN
+  PLAN --> R["Runners · browser / HTTP / SQL"]
+  R --> N["A / O / E notebook"]
+  N --> V["verdict.json from E-* only"]
+  V --> S["manifest.json seal"]
+```
+
+Planner precedence is deterministic: **declared IR → `--llm` → MiniAuth `expand()`**. Declared `verification.version: 1` wins. Hostile kinds, unknown version, and unknown `C-*` are rejected. A constraint with no executable coverage is `INCONCLUSIVE` and the requirement is `NOT_PROVEN` — never silent `PROVEN`.
+
+Six proof layers write the **same** sealed graph: browser · API · state · diff · CI · AI-assisted plan.
+
+## Declare an application
+
+OpenTruth reads two files. It does not reverse-engineer an unfamiliar repository.
+
+**`opentruth.yaml`** — how to start, health, declared routes:
+
+```yaml
+start: python app.py
+url: http://127.0.0.1:{port}
+health: /health
+api:
+  routes:
+    signup:
+      method: POST
+      path: /api/signup
+```
+
+**`requirements.yaml`** — one English requirement plus constraints. External apps that are not MiniAuth-shaped should declare Verification IR:
+
+```yaml
+requirement: "A user can create an account and sign in."
+constraints:
+  - statement: "A second signup with the same mailbox is refused."
 verification:
   version: 1
   steps:
@@ -165,45 +242,69 @@ verification:
         expect: "201"
 ```
 
-That block is the protocol path for an external app. MiniAuth's default
-`requirements.yaml` omits it so the v0.1 demo stays on the expander. MiniTodos
-(`examples/minitodos`) **declares** it so v0.3 cannot accidentally use the
-expander. A coding agent may create these files via
-[`prompts/prepare-for-opentruth.md`](prompts/prepare-for-opentruth.md); it must
-not write a verdict. Every declared `C-*` must have executable coverage;
-missing coverage is `INCONCLUSIVE` → requirement `NOT_PROVEN`, never silent
-`PROVEN`.
+Paste [`prompts/prepare-for-opentruth.md`](prompts/prepare-for-opentruth.md) into a coding agent so it writes **declarations only**. Then run `opentruth verify` **outside** the agent. Wording: “Prepare this application for independent OpenTruth verification” — never “install OpenTruth into the app.”
 
-GitHub Actions (job secret, not a product account):
+MiniAuth’s default YAML omits `verification` so the v0.1 freeze stays on the auth expander. MiniTodos **must** declare IR so v0.3 cannot accidentally expand MiniAuth routes against a todo app.
 
-```yaml
-- uses: ./
-  with:
-    path: examples/miniauth
-    mode: api
-    llm: "true"
-    llm-model: not-the-builder
-  env:
-    OPENTRUTH_LLM_API_KEY: ${{ secrets.OPENTRUTH_LLM_API_KEY }}
-```
+## Fixtures
 
-## Evidence layout
+Both fixtures plant a real gap so the engine can say **no** as well as **yes**. Neither ships OpenTruth runtime inside the app.
+
+| Fixture | Planner | Plant | Default | Fixed |
+|---|---|---|---|---|
+| [`examples/miniauth`](examples/miniauth) | deterministic expander | Session does not persist | `PARTIALLY_PROVEN` (C-3) | `--persist-session` → `PROVEN` |
+| [`examples/minitodos`](examples/minitodos) | `ir` | Complete returns 200, `done` stays false | `PARTIALLY_PROVEN` (C-2) | `MINITODOS_PERSIST_COMPLETE=1` → `PROVEN` |
+
+v0.1.0-m1 acceptance (MiniAuth API, encoded in `tests/test_m1_contract.py`): planted `PARTIALLY_PROVEN` · persist `PROVEN` · planted→fixed diff `PROVEN` with C-3 `IMPROVED`. Run ids change per clone; **outcomes do not**.
+
+## Evidence
+
+Every run is a sealed directory. That folder **is** the product. JSONL is append-only. `manifest.json` is written last and hashes every file. Tamper any file and `opentruth explain` reports `INTEGRITY FAILED` — the stored verdict is no longer evidence.
 
 ```
 .opentruth/runs/<run-id>/
-  manifest.json
-  requirements.json
-  plan.json
-  actions.jsonl
-  observations.jsonl
-  assertions.jsonl
-  screenshots/
-  network/
-  artifacts/
+  manifest.json          # SHA-256 of everything; sealed=true
+  requirements.json      # frozen R-* / C-*
+  plan.json              # ir | llm | deterministic
+  actions.jsonl          # A-*
+  observations.jsonl     # O-*
+  assertions.jsonl       # E-*  (only input to the verdict)
+  screenshots/ network/ artifacts/
   verdict.json
 ```
 
-## Principle
+A stranger can walk `R-* → C-* → A-* / O-* / E-*`. Namespaces are never reused.
 
-**Verifier ≠ Builder.** The same agent that wrote the feature is not the entity that
-decides it works.
+## Protocol laws
+
+Implementation follows these. They do not weaken so the product can look simpler.
+
+1. **Verifier ≠ Builder** — never write tests into the app under judgment.
+2. **Verdict ≠ model opinion** — only recorded assertions decide `PROVEN`.
+3. **Evidence is inspectable** — a stranger can walk the graph.
+4. **Evidence is integrity-protected** — after seal, a changed file is not evidence.
+5. **Failed verification ≠ software failure** — could not look is `INCONCLUSIVE`.
+6. **Inconclusive ≠ proven** — timeouts cannot pad the pass rate.
+7. **Requirements are explicit** — declared YAML only; no secret repo scanning.
+8. **Verdicts are reproducible** — same fixture, same flags, same words.
+9. **AI may propose; machinery decides** — a model may suggest steps; the engine decides truth.
+10. **Every claim points to evidence** — uncovered `C-*` cannot vanish into a pass.
+11. **The planner can change; the notebook does not** — IR, LLM, and `expand()` all land in the same `plan.json`, runners, A/O/E, seal, and E-only verdict.
+
+## What this is not
+
+Automatic requirement discovery · unfamiliar-repo analysis · multi-agent verification · production observability dashboards · verification marketplaces · enterprise SaaS as the product · hosted URL scanning · running the builder’s tests as proof.
+
+Local `verify --url` is a later declared target. A public scanner is refused until isolation, SSRF, credentials, and abuse are designed.
+
+## Status
+
+**v0.1** MiniAuth freeze tagged [`v0.1.0-m1`](https://github.com/dhruvshah464/OpenTruth/releases/tag/v0.1.0-m1) (`fd5eff4`). **v0.2** Verification IR compiles into existing `plan.json`. **v0.3** MiniTodos proves the IR is not auth-specific (`planner=ir`).
+
+Lab write-up, working conditions, inventory, and roadmap: **[PRODUCT-REPORT.md](PRODUCT-REPORT.md)**.
+
+Python 3.11+ · Apache-2.0 · package `opentruth` 0.1.0 · site `http://127.0.0.1:8787`
+
+## License
+
+[Apache License 2.0](LICENSE) · Copyright 2026 Dhruv Shah

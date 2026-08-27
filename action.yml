@@ -1,5 +1,5 @@
 name: OpenTruth Verify
-description: Independently verify a requirement. Uploads the sealed run as a CI artifact. Not a dashboard.
+description: Independently verify that a running application satisfies a declared requirement. Seals an evidence graph and uploads it as a CI artifact.
 author: Dhruv Shah
 branding:
   icon: check-circle

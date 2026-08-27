@@ -2,7 +2,7 @@
 
 **Date:** 27 August 2026  
 **Audience:** anyone who needs the full picture without living in the code  
-**Related:** protocol spec in [`../ideas/Prove.md`](../ideas/Prove.md)
+**Related:** protocol laws and closed loop in [`README.md`](README.md). This file is the lab status report.
 
 OpenTruth is an **open verification protocol** for independently establishing software requirements from executable evidence.
 
@@ -551,7 +551,7 @@ Folder `.opentruth/runs/<id>/` (the website uses `.opentruth/web-runs/`). JSONL 
 
 ## Protocol laws
 
-[`../ideas/Prove.md`](../ideas/Prove.md) is the protocol specification. Code and tests follow it. Do not weaken these in implementation.
+Protocol laws live in this repository ([`README.md`](README.md) · `/company` on the local site). Code and tests follow them. Do not weaken these in implementation.
 
 | # | Law | In plain language |
 |---|---|---|
