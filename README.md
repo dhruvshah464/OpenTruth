@@ -18,17 +18,15 @@ evidence chain is intact, and the seal still matches. It is not a log line.
 
 **The planner can change; the notebook machinery does not.**
 
-See the **[product report](PRODUCT-REPORT.md)** for the full status: protocol
-boundary, MiniAuth falsification contract, working conditions, laws, inventory,
-and what not to start yet. See [`../ideas/Prove.md`](../ideas/Prove.md) for the
-**protocol specification**.
+**Complex protocol. Simple interface.** A founder should not need to learn YAML or the evidence graph before the idea makes sense. The protocol stays rigorous; the product path is: declare what “done” means, declare where the app is, verify, inspect evidence. Coding agents may only **prepare declarations** — they must not modify the verifier or write a verdict. Copy-paste: [`prompts/prepare-for-opentruth.md`](prompts/prepare-for-opentruth.md).
+
+See the **[product report](PRODUCT-REPORT.md)** for the full status: protocol vs product, MiniAuth falsification contract, working conditions, laws, inventory, and roadmap. See [`../ideas/Prove.md`](../ideas/Prove.md) for the **protocol specification**.
 
 ## Status
 
-**v0.1 proof loop established. v0.2 Verification IR implemented. Proof machinery
-unchanged.** Headline is reproducible MiniAuth falsification, not a test count.
+**v0.1 proof loop established. v0.2 Verification IR implemented. Proof machinery unchanged. Product layer named (docs only).** Headline is reproducible MiniAuth falsification, not a test count. Next engine experiment is a different small app on the IR, without the MiniAuth expander.
 
-Company site plus live console: `opentruth serve`. Full write-up:
+Company site plus live console: `opentruth serve`. The site is a **control surface** for the same engine, not a second verifier. Full write-up:
 **[PRODUCT-REPORT.md](PRODUCT-REPORT.md)**.
 
 ## v0.1.0-m1 acceptance contract
@@ -149,9 +147,12 @@ verification:
 ```
 
 That block is the protocol path for an external app. MiniAuth's default
-`requirements.yaml` omits it so the v0.1 demo stays on the expander. Every
-declared `C-*` must have executable coverage; missing coverage is
-`INCONCLUSIVE` → requirement `NOT_PROVEN`, never silent `PROVEN`.
+`requirements.yaml` omits it so the v0.1 demo stays on the expander. A coding
+agent may create these files via
+[`prompts/prepare-for-opentruth.md`](prompts/prepare-for-opentruth.md); it must
+not write a verdict. Every declared `C-*` must have executable coverage;
+missing coverage is `INCONCLUSIVE` → requirement `NOT_PROVEN`, never silent
+`PROVEN`.
 
 GitHub Actions (job secret, not a product account):
 

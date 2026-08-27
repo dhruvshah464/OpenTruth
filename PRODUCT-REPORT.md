@@ -43,7 +43,8 @@ That is the transition. OpenTruth now has a coherent **protocol** story, not onl
 | Verification IR (`verification.version: 1`) | Implemented as v0.2 — compiles into existing `plan.json` |
 | Core proof machinery (runners, A/O/E, seal, E-only verdict) | Unchanged |
 | Git tag `v0.1.0-m1` | Cut at `fd5eff4` — MiniAuth freeze, not the IR commits on `main` |
-| v0.3 generic multi-app verification | **Do not start yet** |
+| Product principle | **Complex protocol. Simple interface.** Named; interfaces not built beyond CLI / Action / MiniAuth console |
+| v0.3 generic app (IR, no expander) | Next **engine** experiment — not started this pass |
 
 Supporting engineering evidence: 77 tests passed (`pytest -m "not browser"`); 3 Chromium tests skipped on purpose; 80 collected. Do not treat that count as the headline.
 
@@ -89,6 +90,109 @@ verdict
 ```
 
 Planners (declared IR, LLM, MiniAuth `expand()`) all land in the same `plan.json`. Runners and assertions write A/O/E. Seal, then verdict. That is the architecture to protect.
+
+---
+
+## Protocol core vs product experience
+
+The protocol does not change so that a founder can use OpenTruth. The **interface around the protocol** must.
+
+**Product principle:** Complex protocol. Simple interface.
+
+A founder should not have to understand Python, YAML, Hatch, `plan.json`, or the evidence graph before the idea makes sense. They should understand:
+
+```
+1. Tell OpenTruth what "done" means.
+2. Tell it where the application is.
+3. Press Verify.
+4. Inspect the evidence.
+```
+
+Everything else stays behind the interface. Internally the protocol remains hard: independent execution, sealed evidence, deterministic verdicts.
+
+### What is being verified
+
+The object of proof is the **running system**, not the repository.
+
+```
+                    SYSTEM UNDER TEST
+                           │
+              ┌────────────┼────────────┐
+              ▼            ▼            ▼
+           source       runtime       data
+              │            │            │
+              └────────────┼────────────┘
+                           ▼
+                      observable
+                       behavior
+```
+
+Source is supporting context. OpenTruth verifies observable behavior of localhost, staging, a container, or (later) a declared URL. “Repo verification” is the wrong mental model.
+
+### Control surfaces, not engines
+
+```
+                OpenTruth Protocol
+                       │
+          ┌────────────┼────────────┐
+          ▼            ▼            ▼
+        CLI         GitHub       Web UI
+                       Action
+          │            │            │
+          └────────────┼────────────┘
+                       ▼
+                 same verifier
+                       │
+                       ▼
+                 same evidence
+                       │
+                       ▼
+                  same verdict
+```
+
+The sealed run is the source of truth. CLI, the GitHub Action, and the local site are **control surfaces**. The website must not become a giant agent that *is* the proof. Today’s console at `:8787` drives MiniAuth through the same engine as `opentruth verify`.
+
+### The trap
+
+Do not run the builder’s tests and call that proof.
+
+```
+Cursor says "here are the tests I wrote"
+        ↓
+OpenTruth runs them
+        ↓
+PROVEN          ← still trusting the builder
+```
+
+The AI may **describe** the application (declarations only). OpenTruth retains authority over what constitutes proof: requirement → verification model → independent actions → independent observations → evidence → verdict.
+
+### Acquisition loop (named, not hosted)
+
+```
+AI coding agent
+      ↓
+"Prepare this application for independent OpenTruth verification"
+      ↓
+declarations only (opentruth.yaml, requirements.yaml, optional IR)
+      ↓
+OpenTruth runs outside the agent
+      ↓
+evidence + verdict
+      ↓
+agent may fix; OpenTruth re-verifies
+```
+
+Copy-paste prompt: [`prompts/prepare-for-opentruth.md`](prompts/prepare-for-opentruth.md). It must not say “install OpenTruth into this repo” or “make the project use OpenTruth.” The builder prepares an adapter layer. The verifier stays an independent executable.
+
+### Three future targets (not implemented)
+
+| Target | Shape | When |
+|---|---|---|
+| Local application | `opentruth verify --path ./my-app` | **Now** (needs declared YAML; MiniAuth expander or IR) |
+| Deployed application | local `opentruth verify --url https://…` | v0.5 — user-controlled install, remote target; **no hosted crawler** |
+| Source + runtime | `--repo` + `--url` | After URL exists — this source produced this running system |
+
+A public `https://opentruth.dev/verify` scanner is refused until isolation, SSRF, credentials, and abuse are designed. First URL capability is local OpenTruth against a declared remote target.
 
 ---
 
@@ -206,7 +310,7 @@ Default MiniAuth API run: C-0, C-1, C-2, C-4 PASS · C-3 FAIL (session). Planted
 
 ### What this is not
 
-It is not a website you log into. It is not a marketplace of verifiers. It does not read an unknown company repo and invent requirements. You declare how to start the app and what “done” means. Then the inspector runs.
+It is not a login SaaS. The local site is a **control surface** for the MiniAuth demo, not a different verifier. It is not a marketplace of verifiers. It does not read an unknown company repo and invent requirements. It does not run the builder’s tests. You (or a coding agent) declare how to start the app and what “done” means. Then the independent inspector runs.
 
 ---
 
@@ -296,7 +400,7 @@ You may ask another model to propose the steps. If it is down, if the key is mis
 
 ## How to use it
 
-There is no login website. An outside user installs the engine on their machine or in CI. The local site at `http://127.0.0.1:8787` is a company surface plus a console bound to MiniAuth. It is not a cloud account.
+There is no login website. An outside user installs the engine on their machine or in CI. The local site at `http://127.0.0.1:8787` is a **control surface** (company pages plus a console bound to MiniAuth). It is the same verifier as the CLI, not a cloud account and not a different engine.
 
 ### 1. Try the practice house
 
@@ -310,12 +414,13 @@ There is no login website. An outside user installs the engine on their machine 
 
 ### 2. Point it at another app
 
-Add two declared files:
+Paste [`prompts/prepare-for-opentruth.md`](prompts/prepare-for-opentruth.md) into Cursor, Claude, or Gemini. The coding agent may create **declarations only**:
 
 - `opentruth.yaml` — how to start, health URL, routes
 - `requirements.yaml` — one English requirement plus constraints
+- optional `verification` block (Verification IR)
 
-Then the same `verify` command.
+Then **you** run `opentruth verify` **outside** the agent. The prompt forbids writing verdicts, evidence, or claiming the app is verified.
 
 MiniAuth can omit a `verification` block and still work, because the built-in planner understands signup / login / session / unauthorized. An app that is **not** auth-shaped should declare Verification IR steps instead of hoping the expander guesses.
 
@@ -453,7 +558,7 @@ Folder `.opentruth/runs/<id>/` (the website uses `.opentruth/web-runs/`). JSONL 
 | Evidence store | Record reality, then seal | Rewrite after seal |
 | Verdict engine | Roll E-* → C-* → R-* | Ask the model what to print |
 
-**The planner can change; the proof machinery does not.** That is why Verification IR was allowed now, and why MiniShop, adversarial suites, and git-range products were not. New planners still have to land in the same sealed notebook.
+**The planner can change; the proof machinery does not.** That is why Verification IR was allowed, and why MiniShop, adversarial suites, and git-range products wait. New planners still land in the same sealed notebook. New interfaces (prompt, later `--url`, later web) must call that notebook — they must not replace it.
 
 ---
 
@@ -468,6 +573,12 @@ Folder `.opentruth/runs/<id>/` (the website uses `.opentruth/web-runs/`). JSONL 
 | `opentruth diff` | Compare two sealed runs |
 | `opentruth pack` | Zip a sealed run for CI |
 | `opentruth serve` | Company site + live console |
+
+### Product artifacts (not the verifier)
+
+| Path | Job |
+|---|---|
+| `prompts/prepare-for-opentruth.md` | Copy-paste prompt: builder creates declarations only |
 
 ### Website pages
 
@@ -541,33 +652,30 @@ Not the headline. Headline is the MiniAuth falsification contract. These counts 
 
 ## Future tasks
 
-This is a clean stopping point for this phase. Do **not** start v0.3 yet.
+The remaining major question is no longer “can OpenTruth work?” That is demonstrated. Two questions sit in front:
 
-The remaining major question is no longer “can OpenTruth work?” That is demonstrated. The next question is:
+1. **Protocol:** does OpenTruth generalize beyond MiniAuth? (IR, no auth expander, a different small app.)
+2. **Product:** can a founder give OpenTruth a running app and a claim without learning the notebook? (Interfaces around the same verifier.)
 
-> **Does the OpenTruth protocol generalize beyond the MiniAuth-shaped world?**
+Usability is **named early**. It is not an excuse to change runners, seal, or `verdict.json`. Versions are not sacred. Product usability does not wait until the protocol is “complete,” but this pass is **docs only** — no `--url`, no second demo app, no hosted scanner.
 
-The Versioned Verification IR is the mechanism for answering that. The first experiment that will tell you whether the abstraction is real:
+Treat `v0.1.0-m1` as the **frozen falsifiable experiment**. Treat IR as **v0.2**. The prompt in `prompts/` is the first product-layer artifact.
 
-> Can an external developer take the Verification IR, point OpenTruth at a genuinely different small application, and obtain a correct verdict **without relying on the auth expander?**
-
-Until that experiment, v0.3–v0.7 stay ahead. MiniShop, invariant campaigns, adversarial suites, and “understand any repo” wait. Doing them now would dilute the thing already proved.
-
-Treat the git tag `v0.1.0-m1` as the **frozen falsifiable experiment**, not the latest development branch. Treat the current IR as **v0.2 protocol development** and keep it moving independently after the tag.
-
-### Protocol roadmap (in order)
+### Roadmap (protocol core unchanged; interfaces evolve)
 
 | Version | Task | Status |
 |---|---|---|
 | v0.1.0-m1 | Frozen MiniAuth falsifiable experiment | Done (`v0.1.0-m1` → `fd5eff4`) |
-| v0.2 | Versioned Verification IR compiling into existing `plan.json` (bridge built; do not redesign plan/evidence) | Done |
-| *next experiment* | External developer + different small app + IR, no auth expander | Not started — this is the real v0.2 validation |
-| v0.3 | Generic browser / API / state verification for apps that are not MiniAuth-shaped | **Do not start yet** |
-| v0.4 | Adversarial verification (hostile inputs as declared campaigns) | Not started |
-| v0.5 | Invariant verification as a first-class campaign, not a MiniAuth plant | Not started |
-| v0.6 | Git / PR differential verification (e.g. `verify --base HEAD~1`) | Not started |
-| v0.7+ | AI-generated Verification IR (still never writes `verdict.json`) | Not started |
-| after that | Benchmark apps (MiniShop and friends) | Not started |
+| v0.2 | Versioned Verification IR compiling into existing `plan.json` | Done |
+| v0.3 | Independent generic app verification (IR only, no auth expander) | Next **engine** experiment — not started |
+| v0.4 | Zero-config bootstrap: “Prepare this application for independent OpenTruth verification” | Prompt shipped as docs; no CLI/Action change |
+| v0.5 | Local `verify --url` / deployed-app verification (user-controlled install; no hosted crawler) | Not started |
+| v0.6 | Adversarial verification (hostile inputs as declared campaigns) | Not started |
+| v0.7 | Invariant verification as a first-class campaign, not a MiniAuth plant | Not started |
+| v0.8 | Git / PR differential verification (e.g. `verify --base HEAD~1`) | Not started |
+| v0.9 | AI-generated Verification IR (still never writes `verdict.json`) | Not started |
+| v1.0 | OpenTruth Protocol — same verifier behind CLI, Action, and future web | Not started |
+| after that | Benchmark apps (MiniShop and friends); `--repo` + `--url` source→runtime chain | Not started |
 
 ### Do now if you want a frozen release
 
@@ -584,18 +692,21 @@ Treat the git tag `v0.1.0-m1` as the **frozen falsifiable experiment**, not the 
 - Verification marketplaces — buying/selling proofs
 - Enterprise dashboards — a SaaS UI as the product
 - Accounts, billing, or hosted `serve` — stay local
+- Public URL scanning service (`opentruth.dev/verify`) — SSRF, credentials, isolation, abuse; local `--url` comes first
 
 ### Also refused
 
 | Idea | Why not |
 |---|---|
 | Write tests into the target app | Then the builder owns the proof |
+| Run the builder’s tests and stamp PROVEN | Still trusting the builder |
 | Crawl OpenAPI / fuzz APIs as a product | M2 is declared routes only |
-| A generic invariant language / DB fuzzer right now | Wait for v0.5; M3 today is one runner |
-| Crawl every git commit as a product | Wait for v0.6; M4 today is two sealed runs |
-| Hosted verification in the cloud | M5 is the CLI in CI |
-| Let an LLM write `verdict.json` | M6 / v0.7 may write plans only |
+| A generic invariant language / DB fuzzer right now | Wait for v0.7; M3 today is one runner |
+| Crawl every git commit as a product | Wait for v0.8; M4 today is two sealed runs |
+| Hosted verification in the cloud | M5 is the CLI in CI; website is a control surface |
+| Let an LLM write `verdict.json` | M6 / v0.9 may write plans only |
 | Treat raw YAML as the IR | Requirement language ≠ Verification IR ≠ `plan.json` |
+| “Install OpenTruth into the app” as the bootstrap | The builder must not modify the verifier |
 
 ### Risks that stay true
 
@@ -631,13 +742,13 @@ seal manifest.json
 opentruth explain walks the graph
 ```
 
-The website is that engine served. If a change does not make **PROVEN** more defensible, it waits.
+The website is that engine **served**, not a second verifier. If a change does not make **PROVEN** more defensible, it waits. If a change only makes the protocol easier to reach without weakening independence, it belongs in the **product layer**.
 
 ---
 
 ## Assessment
 
-The remaining major question is no longer “Can OpenTruth work?” You have demonstrated that. The next question is whether the protocol generalizes beyond MiniAuth. The Verification IR is the bridge, built without compromising M1.
+The remaining major question is no longer “Can OpenTruth work?” You have demonstrated that. Next: does the protocol generalize beyond MiniAuth, and can the **product layer** hide the notebook without owning the proof. The Verification IR is the bridge. The bootstrap prompt is the first interface artifact. Neither may compromise M1.
 
 | Foundation | Status |
 |---|---|
@@ -652,4 +763,6 @@ The remaining major question is no longer “Can OpenTruth work?” You have dem
 | LLM separation | Yes |
 | Versioned Verification IR | Yes |
 | Protocol/document boundary | Yes |
+| Protocol vs product distinction | Yes (this pass; docs only) |
+| Prepare-for-OpenTruth prompt | Yes (`prompts/prepare-for-opentruth.md`) |
 | Reproducible release target | Yes (`v0.1.0-m1` at `fd5eff4`) |

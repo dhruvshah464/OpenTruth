@@ -17,7 +17,7 @@
     <div class="wrap">
       <div class="kicker">Documentation</div>
       <h1>CLI, CI, and this site.</h1>
-      <p class="lede">The interface is the command and a run directory. The website is the same engine. Headline is reproducible MiniAuth falsification, not a test count. Declared Verification IR is the protocol path; the MiniAuth expander is compatibility. Do not start generic multi-app verification yet.</p>
+      <p class="lede">The sealed run is the source of truth. CLI, CI, and this site are control surfaces of the same engine. Headline is reproducible MiniAuth falsification, not a test count. Declared Verification IR is the protocol path; the MiniAuth expander is compatibility. A coding agent may prepare declarations; <span class="mono">verify</span> still runs independently.</p>
     </div>
   </section>
   <section class="section">
@@ -106,7 +106,7 @@ opentruth explain R-1 --path examples/miniauth
   <section class="section">
     <div class="wrap">
       <h2>Declared environment only</h2>
-      <p class="muted">OpenTruth reads <span class="mono">opentruth.yaml</span> and <span class="mono">requirements.yaml</span>. It does not reverse-engineer unfamiliar repositories. That freeze is intentional.</p>
+      <p class="muted">OpenTruth reads <span class="mono">opentruth.yaml</span> and <span class="mono">requirements.yaml</span>. It does not reverse-engineer unfamiliar repositories. That freeze is intentional. To prepare another app, paste the copy-paste prompt (in the repo: <span class="mono">prompts/prepare-for-opentruth.md</span>) into a coding agent so it writes <em>declarations only</em>. Then run <span class="mono">opentruth verify</span> outside the agent. The builder must not modify the verifier or write a verdict.</p>
     </div>
   </section>
   <div id="site-footer"></div>
