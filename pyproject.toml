@@ -32,9 +32,6 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["opentruth"]
 
-[tool.hatch.build.targets.wheel.force-include]
-"opentruth/site" = "opentruth/site"
-
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 timeout = 120

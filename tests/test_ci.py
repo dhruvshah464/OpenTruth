@@ -1,3 +1,5 @@
+import subprocess
+import sys
 import zipfile
 from pathlib import Path
 
@@ -199,3 +201,21 @@ def test_action_and_workflow_are_ci_not_saas() -> None:
     assert workflow["jobs"]["verify"]["steps"][-1]["uses"] == "./"
     assert workflow["jobs"]["verify"]["steps"][-1]["with"]["persist-session"] == "true"
     assert workflow["jobs"]["test"]["steps"][-1]["run"] == 'pytest -m "not browser" -q'
+
+
+def test_wheel_includes_site_assets_once(tmp_path: Path) -> None:
+    """pip install of the Action path builds a wheel; site files must not duplicate."""
+    dest = tmp_path / "wheels"
+    dest.mkdir()
+    subprocess.check_call(
+        [sys.executable, "-m", "pip", "wheel", "--no-deps", "--quiet", "-w", str(dest), str(ROOT)],
+    )
+    wheels = list(dest.glob("opentruth-*.whl"))
+    assert len(wheels) == 1
+    with zipfile.ZipFile(wheels[0]) as archive:
+        names = archive.namelist()
+    site = [name for name in names if name.startswith("opentruth/site/")]
+    assert "opentruth/site/404.html" in site
+    assert "opentruth/site/index.html" in site
+    assert site.count("opentruth/site/404.html") == 1
+    assert "force-include" not in (ROOT / "pyproject.toml").read_text(encoding="utf-8")

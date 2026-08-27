@@ -66,6 +66,7 @@ runs:
       run: python -m pip install --quiet "${{ github.action_path }}"
     - name: Verify
       id: verify
+      if: success()
       shell: bash
       run: |
         extra=()
@@ -86,15 +87,19 @@ runs:
         fi
         opentruth verify --path "${{ inputs.path }}" --mode "${{ inputs.mode }}" "${extra[@]}"
     - name: Pack sealed run
-      if: always()
+      if: ${{ always() && steps.verify.conclusion != 'skipped' }}
       id: pack
       shell: bash
       run: |
+        if ! command -v opentruth >/dev/null 2>&1; then
+          echo "skip pack: opentruth is not installed"
+          exit 0
+        fi
         bundle="${RUNNER_TEMP}/opentruth-run.zip"
         opentruth pack --path "${{ inputs.path }}" --out "${bundle}"
         echo "bundle=${bundle}" >> "${GITHUB_OUTPUT}"
     - name: Upload sealed run
-      if: always()
+      if: ${{ always() && steps.pack.outputs.bundle != '' }}
       uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.artifact-name }}
