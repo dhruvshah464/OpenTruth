@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Evidence — OpenTruth</title>
+  <meta name="description" content="The sealed run directory is the product. Walk R-1 to E-* and verify SHA-256 hashes."/>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/site.css"/>
+</head>
+<body>
+  <div id="site-nav"></div>
+  <section class="hero">
+    <div class="wrap">
+      <div class="kicker">Evidence model</div>
+      <h1>The run directory is the product.</h1>
+      <p class="lede">Every file is hashed into manifest.json last. JSONL is append-only. IDs are never reused. Tamper any file and the verdict is no longer evidence.</p>
+    </div>
+  </section>
+  <section class="section">
+    <div class="wrap grid-2">
+      <pre class="code">.opentruth/runs/&lt;run-id&gt;/
+  manifest.json
+  requirements.json
+  plan.json
+  actions.jsonl
+  observations.jsonl
+  assertions.jsonl
+  screenshots/
+  network/
+  artifacts/
+  verdict.json</pre>
+      <div>
+        <ul class="rule-list">
+          <li><strong>R-*</strong><span>Requirement. One statement, frozen for the run.</span></li>
+          <li><strong>C-*</strong><span>Constraint. Child of one requirement. C-0 is the happy path.</span></li>
+          <li><strong>A-*</strong><span>Action the verifier took: click, HTTP, SQL, compare.</span></li>
+          <li><strong>O-*</strong><span>Observation: screenshot, HTTP body, DB rows, diff side.</span></li>
+          <li><strong>E-*</strong><span>Assertion citing observations. The only input to the verdict.</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="index">Integrity</div>
+        <div>
+          <h2>Hashes, then the word PROVEN.</h2>
+          <p class="muted">Confidence is passed / conclusive assertions. INCONCLUSIVE is excluded from the denominator so a crash cannot look like a product failure. That is the analogue of distinguishing verifier-inability from product-failure.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+  <div id="site-footer"></div>
+  <script type="module" src="/js/site.js"></script>
+</body>
+</html>

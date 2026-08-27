@@ -85,6 +85,14 @@ def cmd_pack(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_serve(args: argparse.Namespace) -> int:
+    from opentruth.server import serve
+
+    print(f"OpenTruth  http://{args.host}:{args.port}", flush=True)
+    serve(host=args.host, port=args.port)
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="opentruth", description="Independent software verification.")
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -154,6 +162,11 @@ def build_parser() -> argparse.ArgumentParser:
     pack_p.add_argument("--run", default=None, help="run directory or id path (default: latest)")
     pack_p.add_argument("--out", default=None, help="zip path or directory (default: ./<run-id>.zip)")
     pack_p.set_defaults(func=cmd_pack)
+
+    serve_p = sub.add_parser("serve", help="run the OpenTruth product site and live engine")
+    serve_p.add_argument("--host", default="127.0.0.1")
+    serve_p.add_argument("--port", type=int, default=8787)
+    serve_p.set_defaults(func=cmd_serve)
     return parser
 
 

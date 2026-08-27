@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Console — OpenTruth</title>
+  <meta name="description" content="Run OpenTruth against MiniAuth. Inspect the sealed evidence graph. Diff two runs."/>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/site.css"/>
+</head>
+<body>
+  <div id="site-nav"></div>
+  <section class="hero hero-compact">
+    <div class="wrap">
+      <div class="kicker">Live engine</div>
+      <h1>Verification console</h1>
+      <p class="lede">This console runs the real OpenTruth engine against MiniAuth. It does not write tests into that app. The working loop is planted bug → claimed fix → sealed diff.</p>
+    </div>
+  </section>
+  <section class="section section-flush">
+    <div class="wrap console-layout">
+      <div>
+        <div class="panel">
+          <div class="panel-h">Proof loop</div>
+          <div class="panel-b">
+            <p class="panel-lead">Three sealed runs in one action: PARTIALLY_PROVEN, PROVEN, then the delta.</p>
+            <form id="loop-form">
+              <div class="field">
+                <label for="loop-mode">Layer</label>
+                <select id="loop-mode">
+                  <option value="api" selected>M2 · API</option>
+                  <option value="state">M3 · State / invariant</option>
+                </select>
+              </div>
+              <button class="btn" id="loop-btn" type="submit">Run full proof</button>
+            </form>
+          </div>
+        </div>
+        <div class="panel panel-spaced">
+          <div class="panel-h">Single proof</div>
+          <div class="panel-b">
+            <form id="verify-form">
+              <div class="field">
+                <label for="mode">Proof layer</label>
+                <select id="mode">
+                  <option value="api" selected>M2 · API</option>
+                  <option value="state">M3 · State / invariant</option>
+                  <option value="browser">M1 · Browser</option>
+                </select>
+              </div>
+              <label class="check"><input id="persist" type="checkbox"/> Persist session (disable planted bug)</label>
+              <label class="check"><input id="identity" type="checkbox"/> Write identity row (state mode)</label>
+              <label class="check"><input id="llm" type="checkbox"/> LLM plan only (never the verdict)</label>
+              <button class="btn ghost" id="verify-btn" type="submit">Run one proof</button>
+            </form>
+          </div>
+        </div>
+        <p class="busy" id="console-busy" hidden>Executing plan… sealing run…</p>
+        <p class="err" id="console-error"></p>
+        <div class="panel panel-spaced">
+          <div class="panel-h">Sealed runs</div>
+          <div class="panel-b">
+            <div id="run-list" class="runs"></div>
+          </div>
+        </div>
+        <div class="panel panel-spaced">
+          <div class="panel-h">Diff two runs</div>
+          <div class="panel-b">
+            <form id="diff-form">
+              <div class="field">
+                <label for="diff-left">Left (before)</label>
+                <select id="diff-left"></select>
+              </div>
+              <div class="field">
+                <label for="diff-right">Right (after)</label>
+                <select id="diff-right"></select>
+              </div>
+              <button class="btn ghost" id="diff-btn" type="submit">Compare runs</button>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div id="loop-stamps" class="stamp-row" hidden></div>
+        <div id="result-stamp" class="stamp stamp-spaced">
+          <div class="kicker">Awaiting execution</div>
+          <div class="stamp-verdict">—</div>
+          <p class="muted">Run the full proof to seal planted, fixed, and diff graphs.</p>
+        </div>
+        <div class="meta-actions">
+          <p class="mono muted" id="plan-meta"></p>
+          <a class="text-link" id="pack-link" hidden href="#">Download pack</a>
+        </div>
+        <div class="panel panel-spaced">
+          <div class="panel-h">Constraints</div>
+          <div class="panel-b" id="result-table"><p class="muted">No run loaded.</p></div>
+        </div>
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-h">Evidence graph</div>
+            <div class="panel-b tree" id="graph-tree"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-h">Explain</div>
+            <div class="panel-b"><div class="explain" id="explain-out">Select a node after a run.</div></div>
+          </div>
+        </div>
+        <div class="panel panel-spaced" id="files-panel" hidden>
+          <div class="panel-h">Sealed files</div>
+          <div class="panel-b" id="files-view"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <div id="site-footer"></div>
+  <script type="module" src="/js/site.js"></script>
+  <script type="module" src="/js/console.js"></script>
+</body>
+</html>

@@ -29,6 +29,18 @@ inputs:
     description: Python version used to install OpenTruth
     required: false
     default: "3.12"
+  llm:
+    description: Ask an LLM to propose plan.json only (never verdict.json). Needs OPENTRUTH_LLM_API_KEY in the job env.
+    required: false
+    default: "false"
+  llm-model:
+    description: Chat model. Prefer a different model than the builder. Empty uses OPENTRUTH_LLM_MODEL.
+    required: false
+    default: ""
+  llm-base-url:
+    description: OpenAI-compatible base URL. Empty uses OPENTRUTH_LLM_BASE_URL.
+    required: false
+    default: ""
 outputs:
   verdict:
     description: PROVEN, PARTIALLY_PROVEN, FAILED, NOT_PROVEN, or INCONCLUSIVE
@@ -62,6 +74,15 @@ runs:
         fi
         if [ "${{ inputs.write-identity }}" = "true" ]; then
           extra+=(--write-identity)
+        fi
+        if [ "${{ inputs.llm }}" = "true" ]; then
+          extra+=(--llm)
+        fi
+        if [ -n "${{ inputs.llm-model }}" ]; then
+          extra+=(--llm-model "${{ inputs.llm-model }}")
+        fi
+        if [ -n "${{ inputs.llm-base-url }}" ]; then
+          extra+=(--llm-base-url "${{ inputs.llm-base-url }}")
         fi
         opentruth verify --path "${{ inputs.path }}" --mode "${{ inputs.mode }}" "${extra[@]}"
     - name: Pack sealed run

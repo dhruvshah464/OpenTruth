@@ -15,7 +15,7 @@ from opentruth.llm import (
 from opentruth.planning import expand
 from opentruth.requirement import load_requirements
 from opentruth.store import load_json
-from opentruth.verdicts import PARTIALLY_PROVEN
+from opentruth.verdicts import NOT_PROVEN, PARTIALLY_PROVEN
 
 ROOT = Path(__file__).resolve().parents[1]
 MINIAUTH = ROOT / "examples" / "miniauth"
@@ -198,3 +198,38 @@ def test_llm_verdict_only_payload_is_not_authoritative(tmp_path: Path) -> None:
     plan = load_json(result["run_dir"] / "plan.json")
     assert plan["planner"] == "deterministic"
     assert "no steps" in plan["llm_error"]
+
+
+def test_llm_thin_plan_is_not_proven(tmp_path: Path) -> None:
+    """A model that only covers C-0 cannot skip the rest into PROVEN."""
+    proposer = ScriptedProposer(
+        {
+            "steps": [
+                {
+                    "kind": "http_request",
+                    "constraint_id": "C-0",
+                    "method": "POST",
+                    "path": "/api/signup",
+                    "json": {"email": "thin@example.test", "password": "correct-horse-battery"},
+                },
+                {"kind": "assert", "constraint_id": "C-0", "check": "status_equals", "expect": "201"},
+                {
+                    "kind": "http_request",
+                    "constraint_id": "C-0",
+                    "method": "POST",
+                    "path": "/api/login",
+                    "json": {"email": "thin@example.test", "password": "correct-horse-battery"},
+                },
+                {"kind": "assert", "constraint_id": "C-0", "check": "status_equals", "expect": "200"},
+            ]
+        }
+    )
+    result = verify(MINIAUTH, runs_root=tmp_path, persist_session=False, mode="api", llm=proposer)
+    req = result["verdict"]["requirements"][0]
+    assert req["verdict"] == NOT_PROVEN
+    by_id = {row["id"]: row["result"] for row in req["constraints"]}
+    assert by_id["C-0"] == "pass"
+    assert by_id["C-3"] == "inconclusive"
+    plan = load_json(result["run_dir"] / "plan.json")
+    assert plan["planner"] == "llm"
+    assert "verdict" not in plan

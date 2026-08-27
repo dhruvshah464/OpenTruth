@@ -191,6 +191,8 @@ def test_action_and_workflow_are_ci_not_saas() -> None:
     assert "actions/upload-artifact" in steps
     assert "opentruth verify" in steps
     assert "opentruth pack" in steps
+    assert "--llm" in (ROOT / "action.yml").read_text(encoding="utf-8")
+    assert "llm" in action["inputs"]
     workflow = yaml.safe_load(
         (ROOT / ".github" / "workflows" / "opentruth.yml").read_text(encoding="utf-8")
     )

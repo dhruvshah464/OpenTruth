@@ -16,11 +16,7 @@ post-M6 freeze (no dashboards, marketplaces, or “understand any repo”).
 
 ## Status
 
-Milestone 1: **browser proof**. Milestone 2: **API proof**. Milestone 3: **state /
-invariant proof**. Milestone 4: **change/diff proof**. Milestone 5: **continuous
-verification**. Milestone 6: **AI-assisted planning** (`--llm` may write `plan.json`
-only). Six proof layers shipped. Freeze: no dashboards, marketplaces, or
-“understand any repo.”
+Six proof layers shipped. Company site plus live console: `opentruth serve`.
 
 ## Quick start
 
@@ -28,6 +24,15 @@ only). Six proof layers shipped. Freeze: no dashboards, marketplaces, or
 pip install -e ".[dev]"
 playwright install chromium
 pytest
+opentruth serve
+```
+
+Open `http://127.0.0.1:8787` — Engine, Evidence, Docs, Company, and a console that
+runs the real verifier against MiniAuth.
+
+CLI:
+
+```bash
 opentruth verify --path examples/miniauth
 opentruth verify --path examples/miniauth --mode api
 opentruth verify --path examples/miniauth --mode state
@@ -77,14 +82,30 @@ This repo’s workflow (`.github/workflows/opentruth.yml`) runs `pytest -m "not 
 and the MiniAuth API proof with the planted bug disabled so the engine gate is **PROVEN**.
 
 Optional: ask a *different* model than the builder to propose the plan. The verdict
-is still rolled up from assertions.
+is still rolled up from assertions. The model cannot decide PROVEN.
 
 ```bash
 export OPENTRUTH_LLM_API_KEY=...
+# optional: export OPENTRUTH_LLM_BASE_URL=https://api.openai.com/v1
+# optional: export OPENTRUTH_LLM_MODEL=gpt-4o-mini
 opentruth verify --path examples/miniauth --mode api --llm --llm-model not-the-builder
 ```
 
-If the model is down, verify falls back to the deterministic planner.
+If the model is down, the key is missing, or the proposal fails the IR allowlist,
+verify falls back to the deterministic planner and records `llm_error` on `plan.json`.
+
+GitHub Actions (job secret, not a product account):
+
+```yaml
+- uses: ./
+  with:
+    path: examples/miniauth
+    mode: api
+    llm: "true"
+    llm-model: not-the-builder
+  env:
+    OPENTRUTH_LLM_API_KEY: ${{ secrets.OPENTRUTH_LLM_API_KEY }}
+```
 
 ## Evidence layout
 

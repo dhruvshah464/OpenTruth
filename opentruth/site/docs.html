@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Docs — OpenTruth</title>
+  <meta name="description" content="Install OpenTruth, run verify, explain, diff, pack, and serve the product site."/>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/site.css"/>
+</head>
+<body>
+  <div id="site-nav"></div>
+  <section class="hero">
+    <div class="wrap">
+      <div class="kicker">Documentation</div>
+      <h1>CLI, CI, and this site.</h1>
+      <p class="lede">The interface is the command and a run directory. The website is the same engine. The console runs planted → claimed fix → sealed diff against MiniAuth.</p>
+    </div>
+  </section>
+  <section class="section">
+    <div class="wrap grid-2">
+      <div>
+        <h2>Install</h2>
+        <pre class="code">pip install -e ".[dev]"
+playwright install chromium
+pytest
+opentruth serve</pre>
+        <p class="muted">Site defaults to <span class="mono">http://127.0.0.1:8787</span>.</p>
+      </div>
+      <div>
+        <h2>Verify</h2>
+        <pre class="code">opentruth verify --path examples/miniauth
+opentruth verify --path examples/miniauth --mode api
+opentruth verify --path examples/miniauth --mode state
+opentruth explain R-1 --path examples/miniauth</pre>
+      </div>
+      <div>
+        <h2>Claimed fix</h2>
+        <pre class="code">opentruth verify --path examples/miniauth --mode api
+opentruth verify --path examples/miniauth --mode api --persist-session
+opentruth diff &lt;before&gt; &lt;after&gt; --path examples/miniauth
+
+# Or one action in the console: Run full proof</pre>
+      </div>
+      <div>
+        <h2>CI contract</h2>
+        <pre class="code">PROVEN              → 0
+INCONCLUSIVE        → 2
+all other verdicts  → 1
+tampered pack       → 3
+
+opentruth pack --path examples/miniauth --out run.zip</pre>
+      </div>
+    </div>
+  </section>
+  <section class="section">
+    <div class="wrap">
+      <h2>M6 · AI-assisted plan</h2>
+      <p class="muted">An external user may ask a <em>different</em> model than the builder to propose <span class="mono">plan.json</span>. The model never writes <span class="mono">verdict.json</span>. Missing key, timeout, hostile IR, or a stub that returns <span class="mono">"verdict": "PROVEN"</span> still rolls the verdict from assertions. Default verify stays deterministic.</p>
+      <pre class="code">export OPENTRUTH_LLM_API_KEY=...
+# optional: OPENTRUTH_LLM_BASE_URL  OPENTRUTH_LLM_MODEL
+opentruth verify --path examples/miniauth --mode api --llm --llm-model not-the-builder
+opentruth explain R-1 --path examples/miniauth
+
+# CI — job env carries the key; the Action never stores it
+- uses: ./
+  with:
+    path: .
+    mode: api
+    llm: "true"
+    llm-model: not-the-builder
+  env:
+    OPENTRUTH_LLM_API_KEY: ${{ secrets.OPENTRUTH_LLM_API_KEY }}</pre>
+      <p class="muted">The console checkbox is the same flag. If the key is unset, the run still seals: planner stays deterministic and <span class="mono">llm_error</span> is recorded on the plan.</p>
+    </div>
+  </section>
+  <section class="section">
+    <div class="wrap">
+      <h2>Declared environment only</h2>
+      <p class="muted">OpenTruth reads <span class="mono">opentruth.yaml</span> and <span class="mono">requirements.yaml</span>. It does not reverse-engineer unfamiliar repositories. That freeze is intentional.</p>
+    </div>
+  </section>
+  <div id="site-footer"></div>
+  <script type="module" src="/js/site.js"></script>
+</body>
+</html>

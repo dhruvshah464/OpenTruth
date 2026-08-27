@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Engine — OpenTruth</title>
+  <meta name="description" content="Six proof layers writing the same sealed evidence graph. Browser, API, state, diff, CI, and AI-assisted planning."/>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/site.css"/>
+</head>
+<body>
+  <div id="site-nav"></div>
+  <section class="hero">
+    <div class="wrap">
+      <div class="kicker">Product · Engine</div>
+      <h1>One closed loop.<br/>Six kinds of proof.</h1>
+      <p class="lede">Requirement and declared environment → deterministic plan IR → independent runner → append-only A / O / E records → verdict.json → seal manifest.json. Explain walks the graph and checks hashes.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <ul class="rule-list">
+        <li><strong>M1 Browser</strong><span>Playwright as a browser, not as a test generator. Locators are roles and labels. Missing controls are INCONCLUSIVE, not invented CSS.</span></li>
+        <li><strong>M2 API</strong><span>Declared routes only. Cookie jar for authed calls; a second opener for unauthorized. Observations <span class="mono">kind: http</span>.</span></li>
+        <li><strong>M3 State</strong><span>SQLite after HTTP setup. The MiniAuth identity row is skipped unless the plant is disabled — UI still “works.”</span></li>
+        <li><strong>M4 Diff</strong><span>improved / regressed / unchanged / changed. Any regression is FAILED. Integrity fail on either source is INCONCLUSIVE.</span></li>
+        <li><strong>M5 CI</strong><span>Exit 0 only for PROVEN. Pack refuses a tampered directory. GitHub Action uploads the zip; still no hosted service.</span></li>
+        <li><strong>M6 LLM plan</strong><span>Allowlisted IR. Hostile kinds and DROP TABLE are rejected. A model that returns <span class="mono">"verdict": "PROVEN"</span> does not decide the verdict.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="index">Not built</div>
+        <div>
+          <h2>The freeze is the product discipline.</h2>
+          <p class="muted">After M6 we do not schedule automatic requirement discovery, unfamiliar-repo analysis, multi-agent verification, production observability, verification marketplaces, or enterprise dashboards. Those are how a verification engine becomes an unfinished SaaS.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+  <div id="site-footer"></div>
+  <script type="module" src="/js/site.js"></script>
+</body>
+</html>

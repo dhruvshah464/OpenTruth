@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>OpenTruth — Independent software verification</title>
+  <meta name="description" content="OpenTruth independently operates software against a requirement and returns a sealed evidence graph. PROVEN is defensible. Verifier ≠ Builder."/>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/site.css"/>
+</head>
+<body>
+  <div id="site-nav"></div>
+
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <div class="kicker">Verification engine · M1–M6</div>
+        <h1>Did the software actually satisfy the requirement?</h1>
+        <p class="lede">Coding agents write software, then report that the work is done. OpenTruth is the independent verifier: it operates the built system, records an immutable evidence graph, and returns a verdict a stranger can walk.</p>
+        <div class="actions">
+          <a class="btn" href="/console">Open the console</a>
+          <a class="btn ghost" href="/evidence">Read the evidence model</a>
+        </div>
+      </div>
+      <aside class="hero-aside">
+        <div class="kicker kicker-pad">Live engine</div>
+        <div class="meta-row"><span>Subject</span><span>MiniAuth</span></div>
+        <div class="meta-row"><span>Planted gap</span><span>Session does not persist</span></div>
+        <div class="meta-row"><span>Sealed runs</span><span data-live-runs>—</span></div>
+        <div class="meta-row"><span>Latest verdict</span><span data-live-verdict>—</span></div>
+        <div class="meta-row"><span>Working loop</span><span>planted → fix → diff</span></div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="index">01 / Thesis</div>
+        <div>
+          <h2>Verifier ≠ Builder.</h2>
+          <p class="muted">The same agent that shipped the feature is not the entity that decides it works. OpenTruth never writes tests into the target repository. Plans and evidence live only under a hash-sealed run directory. <em>PROVEN</em> is not a log line.</p>
+        </div>
+      </div>
+      <ul class="rule-list">
+        <li><strong>PROVEN</strong><span>Every planned assertion for the requirement was observed to hold.</span></li>
+        <li><strong>PARTIALLY_PROVEN</strong><span>Happy path holds; at least one constraint fails — as MiniAuth does on session persist.</span></li>
+        <li><strong>FAILED</strong><span>The required happy path was observed not to hold.</span></li>
+        <li><strong>NOT_PROVEN</strong><span>Coverage too thin, or a claimed change did not establish the requirement.</span></li>
+        <li><strong>INCONCLUSIVE</strong><span>Could not observe (app down, timeout). Never counted as pass or fail.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="index">02 / Layers</div>
+        <div>
+          <h2>Six proof layers. One graph.</h2>
+          <p class="muted">Each milestone adds a kind of proof that writes into the same sealed namespaces: R-*, C-*, A-*, O-*, E-*. Nothing else is the product.</p>
+        </div>
+      </div>
+      <div class="grid-3">
+        <article class="card"><div class="kicker">M1</div><h3>Browser proof</h3><p>Operate the UI in Chromium. Observable behavior becomes actions, observations, assertions.</p></article>
+        <article class="card"><div class="kicker">M2</div><h3>API proof</h3><p>Direct HTTP: valid, invalid, unauthorized, state transitions. Same graph, <span class="mono">kind: http</span>.</p></article>
+        <article class="card"><div class="kicker">M3</div><h3>State proof</h3><p>After the system claims signup succeeded, read durable storage. Invariants, not dashboards.</p></article>
+        <article class="card"><div class="kicker">M4</div><h3>Change proof</h3><p>Two sealed runs. What improved, held, or regressed. Differential evidence cites both run IDs.</p></article>
+        <article class="card"><div class="kicker">M5</div><h3>Continuous</h3><p>The CLI in CI. Exit code plus a packed sealed run. Still not a service.</p></article>
+        <article class="card"><div class="kicker">M6</div><h3>AI-assisted plan</h3><p>An LLM may propose <span class="mono">plan.json</span>. It never writes <span class="mono">verdict.json</span>.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="index">03 / Graph</div>
+        <div>
+          <h2>A stranger can walk the proof.</h2>
+          <p class="muted">If the hashes no longer match, <span class="mono">opentruth explain</span> reports INTEGRITY FAILED. The stored verdict is not authoritative.</p>
+        </div>
+      </div>
+      <pre class="graph-sample">R-1  A user can create an account and sign in.  PARTIALLY_PROVEN
+├── C-0  happy path                         PASS
+├── C-1  duplicate emails rejected          PASS
+├── C-2  invalid password rejected          PASS
+├── C-3  session persists after refresh     FAIL
+│    ├── A-…  reload
+│    ├── O-…  url /login
+│    └── E-…  url_contains expect='/dashboard'
+└── C-4  unauthorized access rejected       PASS</pre>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="index">04 / Product</div>
+        <div>
+          <h2>The engine is running.</h2>
+          <p class="muted">This site is not a marketplace. The console executes the real verifier against MiniAuth: planted bug, claimed fix, then a sealed diff. Default single proof is PARTIALLY_PROVEN. The full loop ends PROVEN on the delta.</p>
+          <div class="actions">
+            <a class="btn" href="/console">Run the full proof</a>
+            <a class="btn ghost" href="/docs">Install the CLI</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div id="site-footer"></div>
+  <script type="module" src="/js/site.js"></script>
+</body>
+</html>
