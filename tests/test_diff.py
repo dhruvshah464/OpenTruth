@@ -149,6 +149,7 @@ def test_diff_tampered_source_is_inconclusive(tmp_path: Path) -> None:
 
 
 def test_diff_api_claimed_fix_is_proven(tmp_path: Path) -> None:
+    """v0.1.0-m1: planted → persist-session diff is PROVEN, C-3 IMPROVED."""
     planted = verify(MINIAUTH, runs_root=tmp_path, persist_session=False, mode="api")
     fixed = verify(MINIAUTH, runs_root=tmp_path, persist_session=True, mode="api")
     result = diff_runs(planted["run_dir"], fixed["run_dir"], tmp_path / "diffs")

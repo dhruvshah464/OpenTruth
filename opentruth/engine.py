@@ -6,8 +6,9 @@ from pathlib import Path
 from typing import Any
 
 from opentruth.discovery import load_environment
+from opentruth.ir import IrError
 from opentruth.llm import build_plan
-from opentruth.requirement import load_requirements
+from opentruth.requirement import load_requirement_document
 from opentruth.runners.browser import execute_plan
 from opentruth.runners.http import execute_http_plan
 from opentruth.runners.state import execute_state_plan
@@ -21,6 +22,30 @@ from opentruth.runners.process import (
     stop_app,
     wait_health,
 )
+
+
+def _ensure_coverage(store: RunStore, requirement) -> None:
+    """Every declared C-* must produce assertion evidence. Missing coverage is INCONCLUSIVE."""
+    assertions = load_jsonl(store.root / "assertions.jsonl")
+    have = {row.get("constraint_id") for row in assertions}
+    for constraint in requirement.constraints:
+        if constraint.id in have:
+            continue
+        eid = store.allocate("E-")
+        store.append(
+            "assertions.jsonl",
+            {
+                "id": eid,
+                "constraint_id": constraint.id,
+                "step_id": None,
+                "check": "coverage",
+                "expect": "executable verification",
+                "cites": [],
+                "result": INCONCLUSIVE,
+                "detail": f"no executable verification for {constraint.id}",
+                "artifact": None,
+            },
+        )
 
 
 def _inconclusive_all(store: RunStore, requirement, reason: str) -> list[dict[str, Any]]:
@@ -69,7 +94,8 @@ def verify(
     runs_root.mkdir(parents=True, exist_ok=True)
 
     req_path = _requirement_path(target, mode)
-    requirement = load_requirements(req_path)
+    document = load_requirement_document(req_path)
+    requirement = document.requirement
 
     port = free_port() if start else None
     env = load_environment(target, port=port)
@@ -111,28 +137,44 @@ def verify(
             store.write_json("plan.json", plan)
             _inconclusive_all(store, requirement, f"health check failed: {health_url(env)}")
         else:
-            plan = build_plan(
-                requirement,
-                env.url,
-                mode=mode,
-                routes=env.api_routes or None,
-                llm=llm,
-                llm_model=llm_model,
-                llm_base_url=llm_base_url,
-            )
-            store.write_json("plan.json", plan)
             try:
-                if mode == "api":
-                    execute_http_plan(store, plan)
-                elif mode == "state":
-                    execute_state_plan(store, plan, db_file)
-                else:
-                    execute_plan(store, plan)
-            except Exception as exc:
-                _inconclusive_all(store, requirement, f"{mode} runner failed: {exc}")
+                plan = build_plan(
+                    requirement,
+                    env.url,
+                    mode=mode,
+                    routes=env.api_routes or None,
+                    llm=llm,
+                    llm_model=llm_model,
+                    llm_base_url=llm_base_url,
+                    verification=document.verification,
+                )
+            except IrError as exc:
+                plan = {
+                    "requirement_id": requirement.id,
+                    "mode": mode,
+                    "planner": "ir",
+                    "actor": None,
+                    "base_url": env.url,
+                    "steps": [],
+                    "ir_error": str(exc)[:500],
+                }
+                store.write_json("plan.json", plan)
+                _inconclusive_all(store, requirement, f"verification IR rejected: {exc}")
+            else:
+                store.write_json("plan.json", plan)
+                try:
+                    if mode == "api":
+                        execute_http_plan(store, plan)
+                    elif mode == "state":
+                        execute_state_plan(store, plan, db_file)
+                    else:
+                        execute_plan(store, plan)
+                except Exception as exc:
+                    _inconclusive_all(store, requirement, f"{mode} runner failed: {exc}")
     finally:
         stop_app(proc)
 
+    _ensure_coverage(store, requirement)
     assertions = load_jsonl(store.root / "assertions.jsonl")
     verdict = build_verdict(store.run_id, requirement, assertions)
     store.write_json("verdict.json", verdict)

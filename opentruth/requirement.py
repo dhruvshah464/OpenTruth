@@ -39,7 +39,16 @@ class Requirement:
         }
 
 
-def load_requirements(path: Path, requirement_index: int = 1) -> Requirement:
+@dataclass(frozen=True)
+class RequirementDocument:
+    """Requirement language plus optional Verification IR. Not the execution plan."""
+
+    requirement: Requirement
+    verification: Any = None
+    path: Path | None = None
+
+
+def load_requirement_document(path: Path, requirement_index: int = 1) -> RequirementDocument:
     raw = yaml.safe_load(path.read_text(encoding="utf-8"))
     if not isinstance(raw, dict):
         raise ValueError(f"{path} must be a mapping")
@@ -77,4 +86,12 @@ def load_requirements(path: Path, requirement_index: int = 1) -> Requirement:
                 kind="constraint",
             )
         )
-    return Requirement(id=req_id, statement=statement.strip(), constraints=tuple(constraints))
+    return RequirementDocument(
+        requirement=Requirement(id=req_id, statement=statement.strip(), constraints=tuple(constraints)),
+        verification=raw.get("verification"),
+        path=path,
+    )
+
+
+def load_requirements(path: Path, requirement_index: int = 1) -> Requirement:
+    return load_requirement_document(path, requirement_index).requirement

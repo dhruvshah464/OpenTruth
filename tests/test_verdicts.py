@@ -33,6 +33,7 @@ def test_requirement_roll() -> None:
     assert roll_requirement(PASS, [PASS, FAIL]) == PARTIALLY_PROVEN
     assert roll_requirement(FAIL, [PASS]) == FAILED
     assert roll_requirement(INCONCLUSIVE, [PASS]) == INCONCLUSIVE_V
+    assert roll_requirement(PASS, [PASS, INCONCLUSIVE]) == NOT_PROVEN
 
 
 def test_confidence_excludes_inconclusive() -> None:

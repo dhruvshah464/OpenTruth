@@ -11,39 +11,25 @@ import os
 import re
 import urllib.error
 import urllib.request
-from uuid import uuid4
 from typing import Any, Protocol
 
+from opentruth.ir import (
+    ALLOWED_CHECKS,
+    ALLOWED_KINDS,
+    IrError,
+    RUNNER,
+    compile_verification,
+    default_actor,
+    has_declared_ir,
+    sanitize_step,
+)
 from opentruth.planning import expand
 from opentruth.requirement import Requirement
 
-HOSTILE_KINDS = frozenset(
-    {"shell", "eval", "execute", "run", "write", "python", "subprocess", "javascript", "js"}
-)
-ALLOWED_KINDS = {
-    "browser": frozenset({"navigate", "fill", "click", "reload", "clear_cookies", "assert"}),
-    "api": frozenset({"http_request", "assert"}),
-    "state": frozenset({"http_request", "sql_query", "assert"}),
-}
-ALLOWED_CHECKS = {
-    "browser": frozenset({"url_contains", "text_contains", "unsupported_constraint"}),
-    "api": frozenset({"status_equals", "json_contains", "text_contains", "unsupported_constraint"}),
-    "state": frozenset(
-        {"status_equals", "json_contains", "text_contains", "cell_equals", "unsupported_constraint"}
-    ),
-}
-RUNNER = {"browser": "browser", "api": "http", "state": "state"}
-SQL_OK = re.compile(
-    r"^SELECT COUNT\(\*\) AS n FROM (users|identities) WHERE email = :email$",
-    re.IGNORECASE,
-)
-METHODS = frozenset({"GET", "POST", "PUT", "PATCH", "DELETE"})
 DEFAULT_MODEL = "gpt-4o-mini"
 DEFAULT_BASE_URL = "https://api.openai.com/v1"
 
-
-class PlanError(ValueError):
-    """Proposed plan is not executable IR."""
+PlanError = IrError
 
 
 class PlanProposer(Protocol):
@@ -166,101 +152,6 @@ def render_prompt(
     )
 
 
-def _plain(value: Any, depth: int = 0) -> Any:
-    if depth > 4:
-        raise PlanError("json too nested")
-    if value is None or isinstance(value, (str, int, float, bool)):
-        return value
-    if isinstance(value, dict):
-        if len(value) > 20:
-            raise PlanError("json object too large")
-        return {str(k)[:64]: _plain(v, depth + 1) for k, v in value.items()}
-    if isinstance(value, list):
-        if len(value) > 20:
-            raise PlanError("json list too large")
-        return [_plain(v, depth + 1) for v in value]
-    raise PlanError("json value not serializable")
-
-
-def _sanitize_step(
-    raw: dict[str, Any],
-    allowed_ids: set[str],
-    mode: str,
-    base_url: str,
-) -> dict[str, Any] | None:
-    kind = str(raw.get("kind") or "")
-    if kind in HOSTILE_KINDS:
-        raise PlanError(f"hostile step kind: {kind}")
-    if kind not in ALLOWED_KINDS[mode]:
-        return None
-    cid = str(raw.get("constraint_id") or "")
-    if cid not in allowed_ids:
-        return None
-    step: dict[str, Any] = {"kind": kind, "constraint_id": cid}
-    if kind == "assert":
-        check = str(raw.get("check") or "")
-        if check not in ALLOWED_CHECKS[mode]:
-            return None
-        step["check"] = check
-        step["expect"] = str(raw.get("expect", ""))
-        if check == "cell_equals":
-            step["column"] = str(raw.get("column") or "n")
-        return step
-    if kind == "navigate":
-        url = str(raw.get("url") or "")
-        if url.startswith("/"):
-            url = base_url.rstrip("/") + url
-        if ".." in url or "\n" in url:
-            return None
-        if not url.startswith(base_url) or not url.startswith("http"):
-            return None
-        step["url"] = url
-        return step
-    if kind == "fill":
-        label = str(raw.get("label") or "")
-        if not label:
-            return None
-        step["label"] = label
-        step["value"] = str(raw.get("value") or "")
-        return step
-    if kind == "click":
-        name = str(raw.get("name") or "")
-        if not name:
-            return None
-        step["role"] = str(raw.get("role") or "button")
-        step["name"] = name
-        return step
-    if kind in {"reload", "clear_cookies"}:
-        return step
-    if kind == "http_request":
-        method = str(raw.get("method") or "GET").upper()
-        path = str(raw.get("path") or "")
-        if method not in METHODS or not path.startswith("/") or ".." in path or len(path) > 200 or "\n" in path:
-            return None
-        step["method"] = method
-        step["path"] = path
-        if "json" in raw:
-            step["json"] = _plain(raw.get("json"))
-        else:
-            step["json"] = None
-        step["cookies"] = bool(raw.get("cookies", True))
-        return step
-    if kind == "sql_query":
-        sql = " ".join(str(raw.get("sql") or "").split())
-        if not SQL_OK.match(sql):
-            return None
-        params = raw.get("params") or {}
-        if not isinstance(params, dict):
-            return None
-        email = str(params.get("email") or "")
-        if not email:
-            return None
-        step["sql"] = sql
-        step["params"] = {"email": email}
-        return step
-    return None
-
-
 def sanitize_plan(
     raw: dict[str, Any] | str,
     requirement: Requirement,
@@ -280,7 +171,7 @@ def sanitize_plan(
     for item in steps_in:
         if not isinstance(item, dict):
             continue
-        step = _sanitize_step(item, allowed_ids, mode, base_url)
+        step = sanitize_step(item, allowed_ids, mode, base_url)
         if step is None:
             continue
         cleaned.append(step)
@@ -320,24 +211,24 @@ def build_plan(
     llm_model: str | None = None,
     llm_base_url: str | None = None,
     email: str | None = None,
+    verification: Any = None,
 ) -> dict[str, Any]:
+    actor = default_actor(email)
+    if has_declared_ir(verification):
+        return compile_verification(verification, requirement, mode, base_url, actor, routes)
     proposer = None
     try:
         proposer = resolve_proposer(llm, model=llm_model, base_url=llm_base_url)
     except PlanError as exc:
-        plan = expand(requirement, base_url, email=email, mode=mode, routes=routes)
+        plan = expand(requirement, base_url, email=actor["email"], mode=mode, routes=routes)
         plan["planner"] = "deterministic"
         plan["planner_requested"] = "llm"
         plan["llm_error"] = str(exc)[:500]
         return plan
     if proposer is None:
-        plan = expand(requirement, base_url, email=email, mode=mode, routes=routes)
+        plan = expand(requirement, base_url, email=actor["email"], mode=mode, routes=routes)
         plan["planner"] = "deterministic"
         return plan
-    actor = {
-        "email": email or f"user-{uuid4().hex[:10]}@example.test",
-        "password": "correct-horse-battery",
-    }
     try:
         prompt = render_prompt(requirement, mode, base_url, actor, routes)
         raw = proposer.propose(prompt)

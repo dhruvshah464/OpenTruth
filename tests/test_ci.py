@@ -184,6 +184,14 @@ def test_cli_unreachable_exit_inconclusive(tmp_path: Path) -> None:
     assert exited.value.code == 2
 
 
+def test_action_skips_pack_when_verify_never_ran() -> None:
+    """v0.1 freeze: install failure must not make pack fail the job on a missing binary."""
+    text = (ROOT / "action.yml").read_text(encoding="utf-8")
+    assert "command -v opentruth" in text
+    assert "steps.pack.outputs.bundle" in text
+    assert "force-include" not in (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+
+
 def test_action_and_workflow_are_ci_not_saas() -> None:
     action = yaml.safe_load((ROOT / "action.yml").read_text(encoding="utf-8"))
     assert action["runs"]["using"] == "composite"

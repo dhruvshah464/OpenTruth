@@ -16,6 +16,7 @@ def _constraint_map(result: dict) -> dict[str, str]:
 
 
 def test_api_planted_bug_is_partially_proven(tmp_path: Path) -> None:
+    """v0.1.0-m1: planted MiniAuth API is PARTIALLY_PROVEN (C-3 fail)."""
     result = verify(MINIAUTH, runs_root=tmp_path, persist_session=False, mode="api")
     assert result["verdict"]["requirements"][0]["verdict"] == PARTIALLY_PROVEN
     results = _constraint_map(result)
@@ -39,6 +40,7 @@ def test_api_planted_bug_is_partially_proven(tmp_path: Path) -> None:
 
 
 def test_api_fixed_session_is_proven(tmp_path: Path) -> None:
+    """v0.1.0-m1: --persist-session MiniAuth API is PROVEN."""
     result = verify(MINIAUTH, runs_root=tmp_path, persist_session=True, mode="api")
     assert result["verdict"]["requirements"][0]["verdict"] == PROVEN
     assert all(v == "pass" for v in _constraint_map(result).values())

@@ -17,7 +17,7 @@
     <div class="wrap">
       <div class="kicker">Documentation</div>
       <h1>CLI, CI, and this site.</h1>
-      <p class="lede">The interface is the command and a run directory. The website is the same engine. The console runs planted → claimed fix → sealed diff against MiniAuth.</p>
+      <p class="lede">The interface is the command and a run directory. The website is the same engine. The console runs planted → claimed fix → sealed diff against MiniAuth. Declared Verification IR is the protocol path; the MiniAuth expander is compatibility.</p>
     </div>
   </section>
   <section class="section">
@@ -54,6 +54,32 @@ tampered pack       → 3
 
 opentruth pack --path examples/miniauth --out run.zip</pre>
       </div>
+    </div>
+  </section>
+  <section class="section">
+    <div class="wrap">
+      <h2>Verification IR</h2>
+      <p class="muted">Requirement language is not the execution plan. External apps declare a versioned Verification IR. OpenTruth compiles it into the same <span class="mono">plan.json</span> the runners already execute. The auth expander remains a MiniAuth compatibility path — MiniAuth’s default YAML has no <span class="mono">verification</span> block.</p>
+      <pre class="code">requirement: "Signup creates an account."
+constraints:
+  - statement: "A second signup with the same mailbox is refused."
+verification:
+  version: 1
+  steps:
+    - id: S-1
+      constraint: C-0
+      http_request:
+        method: POST
+        path: /api/signup
+        json:
+          email: "{{actor.email}}"
+          password: "{{actor.password}}"
+    - id: S-2
+      constraint: C-0
+      assert:
+        check: status_equals
+        expect: "201"</pre>
+      <p class="muted">Precedence is deterministic: declared IR, then <span class="mono">--llm</span>, then the auth expander. Unknown version, hostile kinds, and unknown <span class="mono">C-*</span> are rejected — they do not silently expand. A declared constraint with no executable coverage is <span class="mono">INCONCLUSIVE</span> and the requirement is <span class="mono">NOT_PROVEN</span>.</p>
     </div>
   </section>
   <section class="section">
